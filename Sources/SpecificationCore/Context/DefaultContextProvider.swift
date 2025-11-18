@@ -2,7 +2,7 @@
 //  DefaultContextProvider.swift
 //  SpecificationCore
 //
-//  Created by SpecificationKit on 2025.
+//  Created by SpecificationCore on 2025.
 //
 
 import Foundation
@@ -13,7 +13,7 @@ import Foundation
 
 /// A thread-safe context provider that maintains application-wide state for specification evaluation.
 ///
-/// `DefaultContextProvider` is the primary context provider in SpecificationKit, designed to manage
+/// `DefaultContextProvider` is the primary context provider in SpecificationCore, designed to manage
 /// counters, feature flags, events, and user data that specifications use for evaluation. It provides
 /// a shared singleton instance and supports reactive updates through Combine publishers.
 ///

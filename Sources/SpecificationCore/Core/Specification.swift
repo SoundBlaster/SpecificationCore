@@ -2,7 +2,7 @@
 //  Specification.swift
 //  SpecificationCore
 //
-//  Created by SpecificationKit on 2025.
+//  Created by SpecificationCore on 2025.
 //
 
 import Foundation
