@@ -158,7 +158,7 @@ public struct AsyncSatisfies<Context> {
 
     /// Last known value (not automatically refreshed).
     /// Always returns `nil` since async evaluation is required.
-    private var lastValue: Bool? = nil
+    private var lastValue: Bool?
 
     /// The wrapped value is always `nil` for async specifications.
     /// Use the projected value's `evaluate()` method to get the actual result.
@@ -196,8 +196,8 @@ public struct AsyncSatisfies<Context> {
         provider: Provider,
         using specification: Spec
     ) where Provider.Context == Context, Spec.T == Context {
-        self.asyncContextFactory = provider.currentContextAsync
-        self.asyncSpec = AnyAsyncSpecification(specification)
+        asyncContextFactory = provider.currentContextAsync
+        asyncSpec = AnyAsyncSpecification(specification)
     }
 
     /// Initialize with a provider and a predicate.
@@ -205,8 +205,8 @@ public struct AsyncSatisfies<Context> {
         provider: Provider,
         predicate: @escaping (Context) -> Bool
     ) where Provider.Context == Context {
-        self.asyncContextFactory = provider.currentContextAsync
-        self.asyncSpec = AnyAsyncSpecification { candidate in predicate(candidate) }
+        asyncContextFactory = provider.currentContextAsync
+        asyncSpec = AnyAsyncSpecification { candidate in predicate(candidate) }
     }
 
     /// Initialize with a provider and an asynchronous specification.
@@ -214,7 +214,7 @@ public struct AsyncSatisfies<Context> {
         provider: Provider,
         using specification: Spec
     ) where Provider.Context == Context, Spec.T == Context {
-        self.asyncContextFactory = provider.currentContextAsync
-        self.asyncSpec = AnyAsyncSpecification(specification)
+        asyncContextFactory = provider.currentContextAsync
+        asyncSpec = AnyAsyncSpecification(specification)
     }
 }

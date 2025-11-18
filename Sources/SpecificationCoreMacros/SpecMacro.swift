@@ -1,13 +1,14 @@
 import SwiftCompilerPlugin
+import SwiftDiagnostics
 import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
-import SwiftDiagnostics
 
 struct MissingTypealiasTMessage: DiagnosticMessage {
     var message: String {
         "Specification type appears to be missing typealias T (e.g. 'typealias T = EvaluationContext')."
     }
+
     var severity: DiagnosticSeverity { .warning }
     var diagnosticID: MessageID { .init(domain: "SpecificationCoreMacros", id: "missingTypealiasT") }
 }
@@ -21,7 +22,10 @@ struct NonInstanceArgumentMessage: DiagnosticMessage {
 
 struct TypeArgumentWarning: DiagnosticMessage {
     let index: Int
-    var message: String { "Argument #\(index + 1) to @specs looks like a type reference. Did you mean to pass an instance?" }
+    var message: String {
+        "Argument #\(index + 1) to @specs looks like a type reference. Did you mean to pass an instance?"
+    }
+
     var severity: DiagnosticSeverity { .warning }
     var diagnosticID: MessageID { .init(domain: "SpecificationCoreMacros", id: "typeArgWarning") }
 }
@@ -32,6 +36,7 @@ struct MixedContextsWarning: DiagnosticMessage {
         let list = contexts.joined(separator: ", ")
         return "@specs arguments appear to use mixed Context types (\(list)). Ensure all specs share the same Context."
     }
+
     var severity: DiagnosticSeverity { .warning }
     var diagnosticID: MessageID { .init(domain: "SpecificationCoreMacros", id: "mixedContextsWarning") }
 }
@@ -42,13 +47,17 @@ struct MixedContextsError: DiagnosticMessage {
         let list = contexts.joined(separator: ", ")
         return "@specs arguments use mixed Context types (\(list)). All specs must share the same Context."
     }
+
     var severity: DiagnosticSeverity { .error }
     var diagnosticID: MessageID { .init(domain: "SpecificationCoreMacros", id: "mixedContextsError") }
 }
 
 struct AsyncSpecArgumentMessage: DiagnosticMessage {
     let index: Int
-    var message: String { "Argument #\(index + 1) to @specs appears to be an async specification. Use a synchronous Specification instead." }
+    var message: String {
+        "Argument #\(index + 1) to @specs appears to be an async specification. Use a synchronous Specification instead."
+    }
+
     var severity: DiagnosticSeverity { .error }
     var diagnosticID: MessageID { .init(domain: "SpecificationCoreMacros", id: "asyncSpecArg") }
 }
@@ -78,7 +87,6 @@ public enum SpecsMacroError: CustomStringConvertible, Error {
 /// will expand to a struct that conforms to `Specification` and combines `SpecA`
 /// and `SpecB` with `.and()` logic.
 public struct SpecsMacro: MemberMacro {
-
     // MARK: - MemberMacro
 
     /// This expansion adds the necessary members to the type to conform to `Specification`.
@@ -96,16 +104,20 @@ public struct SpecsMacro: MemberMacro {
         // Ensure the macro is applied to a type that conforms to `Specification`.
         let conformsToSpecification: Bool = {
             if let s = declaration.as(StructDeclSyntax.self) {
-                return s.inheritanceClause?.inheritedTypes.contains(where: { $0.type.trimmedDescription == "Specification" }) ?? false
+                return s.inheritanceClause?.inheritedTypes
+                    .contains(where: { $0.type.trimmedDescription == "Specification" }) ?? false
             }
             if let c = declaration.as(ClassDeclSyntax.self) {
-                return c.inheritanceClause?.inheritedTypes.contains(where: { $0.type.trimmedDescription == "Specification" }) ?? false
+                return c.inheritanceClause?.inheritedTypes
+                    .contains(where: { $0.type.trimmedDescription == "Specification" }) ?? false
             }
             if let a = declaration.as(ActorDeclSyntax.self) {
-                return a.inheritanceClause?.inheritedTypes.contains(where: { $0.type.trimmedDescription == "Specification" }) ?? false
+                return a.inheritanceClause?.inheritedTypes
+                    .contains(where: { $0.type.trimmedDescription == "Specification" }) ?? false
             }
             if let e = declaration.as(EnumDeclSyntax.self) {
-                return e.inheritanceClause?.inheritedTypes.contains(where: { $0.type.trimmedDescription == "Specification" }) ?? false
+                return e.inheritanceClause?.inheritedTypes
+                    .contains(where: { $0.type.trimmedDescription == "Specification" }) ?? false
             }
             return false
         }()
@@ -138,19 +150,20 @@ public struct SpecsMacro: MemberMacro {
             "DateRangeSpec",
             "DateComparisonSpec",
             "UserSegmentSpec",
-            "SubscriptionStatusSpec",
+            "SubscriptionStatusSpec"
         ]
 
         func extractContext(from text: String) -> String? {
             if let lt = text.firstIndex(of: "<"), let gt = text[lt...].firstIndex(of: ">") {
-                let inside = text[text.index(after: lt)..<gt]
+                let inside = text[text.index(after: lt) ..< gt]
                 if let first = inside.split(separator: ",").first {
                     let trimmed = first.trimmingCharacters(in: .whitespacesAndNewlines)
                     if !trimmed.isEmpty { return trimmed }
                 }
             }
             if let name = text.split(separator: "(").first?.split(separator: ".").last,
-               knownEvaluationContextSpecs.contains(String(name)) {
+               knownEvaluationContextSpecs.contains(String(name))
+            {
                 return "EvaluationContext"
             }
             return nil
@@ -158,9 +171,9 @@ public struct SpecsMacro: MemberMacro {
 
         func isLiteral(_ expr: ExprSyntax) -> Bool {
             expr.is(StringLiteralExprSyntax.self)
-            || expr.is(BooleanLiteralExprSyntax.self)
-            || expr.is(IntegerLiteralExprSyntax.self)
-            || expr.is(FloatLiteralExprSyntax.self)
+                || expr.is(BooleanLiteralExprSyntax.self)
+                || expr.is(IntegerLiteralExprSyntax.self)
+                || expr.is(FloatLiteralExprSyntax.self)
         }
 
         for (idx, arg) in arguments.enumerated() {
@@ -186,7 +199,10 @@ public struct SpecsMacro: MemberMacro {
             if inferredCount == arguments.count {
                 context.diagnose(Diagnostic(node: Syntax(node), message: MixedContextsError(contexts: contextsSorted)))
             } else {
-                context.diagnose(Diagnostic(node: Syntax(node), message: MixedContextsWarning(contexts: contextsSorted)))
+                context.diagnose(Diagnostic(
+                    node: Syntax(node),
+                    message: MixedContextsWarning(contexts: contextsSorted)
+                ))
             }
         }
 
@@ -239,7 +255,7 @@ public struct SpecsMacro: MemberMacro {
         func hasAutoContext(_ attrs: AttributeListSyntax?) -> Bool {
             guard let attrs else { return false }
             for element in attrs {
-                guard case .attribute(let attr) = element,
+                guard case let .attribute(attr) = element,
                       let simple = attr.attributeName.as(IdentifierTypeSyntax.self) else { continue }
                 if simple.name.text == "AutoContext" { return true }
             }
@@ -258,7 +274,7 @@ public struct SpecsMacro: MemberMacro {
             compositeProperty,
             initializer,
             isSatisfiedByMethod,
-            isSatisfiedByAsyncMethod,
+            isSatisfiedByAsyncMethod
         ]
 
         if hasAutoContextAttribute {
@@ -276,5 +292,4 @@ public struct SpecsMacro: MemberMacro {
 
         return decls
     }
-
 }

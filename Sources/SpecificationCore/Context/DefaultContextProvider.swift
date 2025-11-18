@@ -154,7 +154,6 @@ import Foundation
 /// - **User Data**: Arbitrary key-value storage for custom data
 /// - **Context Providers**: Custom data source factories
 public class DefaultContextProvider: ContextProviding {
-
     // MARK: - Shared Instance
 
     /// Shared singleton instance for convenient access across the application
@@ -362,7 +361,7 @@ public class DefaultContextProvider: ContextProviding {
     /// - Parameters:
     ///   - key: The data key
     ///   - value: The data value
-    public func setUserData<T>(_ key: String, to value: T) {
+    public func setUserData(_ key: String, to value: some Any) {
         lock.lock()
         defer { lock.unlock() }
         _userData[key] = value
@@ -454,7 +453,7 @@ public class DefaultContextProvider: ContextProviding {
     /// - Parameters:
     ///   - contextKey: The key to associate with the provided context
     ///   - provider: A closure that provides the context
-    public func register<T>(contextKey: String, provider: @escaping () -> T) {
+    public func register(contextKey: String, provider: @escaping () -> some Any) {
         lock.lock()
         defer { lock.unlock() }
         _contextProviders[contextKey] = provider
@@ -477,12 +476,11 @@ public class DefaultContextProvider: ContextProviding {
 
 // MARK: - Convenience Extensions
 
-extension DefaultContextProvider {
-
+public extension DefaultContextProvider {
     /// Creates a specification that uses this provider's context
     /// - Parameter predicate: A predicate function that takes an EvaluationContext
     /// - Returns: An AnySpecification that evaluates using this provider's context
-    public func specification<T>(_ predicate: @escaping (EvaluationContext) -> (T) -> Bool)
+    func specification<T>(_ predicate: @escaping (EvaluationContext) -> (T) -> Bool)
         -> AnySpecification<T>
     {
         AnySpecification { candidate in
@@ -494,7 +492,7 @@ extension DefaultContextProvider {
     /// Creates a context-aware predicate specification
     /// - Parameter predicate: A predicate that takes both context and candidate
     /// - Returns: An AnySpecification that evaluates the predicate with this provider's context
-    public func contextualPredicate<T>(_ predicate: @escaping (EvaluationContext, T) -> Bool)
+    func contextualPredicate<T>(_ predicate: @escaping (EvaluationContext, T) -> Bool)
         -> AnySpecification<T>
     {
         AnySpecification { candidate in
@@ -505,7 +503,9 @@ extension DefaultContextProvider {
 }
 
 #if canImport(Combine)
+
     // MARK: - Observation bridging
+
     extension DefaultContextProvider: ContextUpdatesProviding {
         /// Emits a signal when internal state changes.
         public var contextUpdates: AnyPublisher<Void, Never> {

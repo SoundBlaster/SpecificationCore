@@ -117,13 +117,14 @@ public struct AnyAsyncSpecification<T>: AsyncSpecification {
     /// Creates a type-erased async specification wrapping the given async specification.
     /// - Parameter spec: The async specification to wrap
     public init<S: AsyncSpecification>(_ spec: S) where S.T == T {
-        self._isSatisfied = spec.isSatisfiedBy
+        _isSatisfied = spec.isSatisfiedBy
     }
 
     /// Creates a type-erased async specification from an async closure.
-    /// - Parameter predicate: An async closure that takes a candidate and returns whether it satisfies the specification
+    /// - Parameter predicate: An async closure that takes a candidate and returns whether it satisfies the
+    /// specification
     public init(_ predicate: @escaping (T) async throws -> Bool) {
-        self._isSatisfied = predicate
+        _isSatisfied = predicate
     }
 
     public func isSatisfiedBy(_ candidate: T) async throws -> Bool {
@@ -133,9 +134,9 @@ public struct AnyAsyncSpecification<T>: AsyncSpecification {
 
 // MARK: - Bridging
 
-extension AnyAsyncSpecification {
+public extension AnyAsyncSpecification {
     /// Bridge a synchronous specification to async form.
-    public init<S: Specification>(_ spec: S) where S.T == T {
-        self._isSatisfied = { candidate in spec.isSatisfiedBy(candidate) }
+    init<S: Specification>(_ spec: S) where S.T == T {
+        _isSatisfied = { candidate in spec.isSatisfiedBy(candidate) }
     }
 }

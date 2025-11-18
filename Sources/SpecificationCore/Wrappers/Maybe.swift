@@ -123,7 +123,7 @@ public struct Maybe<Context, Result> {
         provider: Provider,
         using specification: S
     ) where Provider.Context == Context, S.Context == Context, S.Result == Result {
-        self.contextFactory = provider.currentContext
+        contextFactory = provider.currentContext
         self.specification = AnyDecisionSpec(specification)
     }
 
@@ -131,40 +131,41 @@ public struct Maybe<Context, Result> {
         provider: Provider,
         firstMatch pairs: [(S, Result)]
     ) where Provider.Context == Context, S.T == Context {
-        self.contextFactory = provider.currentContext
-        self.specification = AnyDecisionSpec(FirstMatchSpec(pairs))
+        contextFactory = provider.currentContext
+        specification = AnyDecisionSpec(FirstMatchSpec(pairs))
     }
 
     public init<Provider: ContextProviding>(
         provider: Provider,
         decide: @escaping (Context) -> Result?
     ) where Provider.Context == Context {
-        self.contextFactory = provider.currentContext
-        self.specification = AnyDecisionSpec(decide)
+        contextFactory = provider.currentContext
+        specification = AnyDecisionSpec(decide)
     }
 }
 
 // MARK: - EvaluationContext conveniences
 
-extension Maybe where Context == EvaluationContext {
-    public init<S: DecisionSpec>(using specification: S)
-    where S.Context == EvaluationContext, S.Result == Result {
+public extension Maybe where Context == EvaluationContext {
+    init<S: DecisionSpec>(using specification: S)
+        where S.Context == EvaluationContext, S.Result == Result
+    {
         self.init(provider: DefaultContextProvider.shared, using: specification)
     }
 
-    public init<S: Specification>(_ pairs: [(S, Result)]) where S.T == EvaluationContext {
+    init<S: Specification>(_ pairs: [(S, Result)]) where S.T == EvaluationContext {
         self.init(provider: DefaultContextProvider.shared, firstMatch: pairs)
     }
 
-    public init(decide: @escaping (EvaluationContext) -> Result?) {
+    init(decide: @escaping (EvaluationContext) -> Result?) {
         self.init(provider: DefaultContextProvider.shared, decide: decide)
     }
 }
 
 // MARK: - Builder Pattern Support (optional results)
 
-extension Maybe {
-    public static func builder<Provider: ContextProviding>(
+public extension Maybe {
+    static func builder<Provider: ContextProviding>(
         provider: Provider
     ) -> MaybeBuilder<Context, Result> where Provider.Context == Context {
         MaybeBuilder(provider: provider)
@@ -175,13 +176,15 @@ public struct MaybeBuilder<Context, Result> {
     private let contextFactory: () -> Context
     private var builder = FirstMatchSpec<Context, Result>.builder()
 
-    internal init<Provider: ContextProviding>(provider: Provider)
-    where Provider.Context == Context {
-        self.contextFactory = provider.currentContext
+    init<Provider: ContextProviding>(provider: Provider)
+        where Provider.Context == Context
+    {
+        contextFactory = provider.currentContext
     }
 
     public func with<S: Specification>(_ specification: S, result: Result) -> MaybeBuilder
-    where S.T == Context {
+        where S.T == Context
+    {
         _ = builder.add(specification, result: result)
         return self
     }

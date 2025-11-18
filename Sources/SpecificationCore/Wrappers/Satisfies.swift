@@ -60,7 +60,6 @@ import Foundation
 /// - Important: Ensure the specification and context provider are thread-safe if used in concurrent environments.
 @propertyWrapper
 public struct Satisfies<Context> {
-
     private let contextFactory: () -> Context
     private let asyncContextFactory: (() async throws -> Context)?
     private let specification: AnySpecification<Context>
@@ -105,8 +104,8 @@ public struct Satisfies<Context> {
         provider: Provider,
         using specification: Spec
     ) where Provider.Context == Context, Spec.T == Context {
-        self.contextFactory = provider.currentContext
-        self.asyncContextFactory = provider.currentContextAsync
+        contextFactory = provider.currentContext
+        asyncContextFactory = provider.currentContextAsync
         self.specification = AnySpecification(specification)
     }
 
@@ -128,8 +127,8 @@ public struct Satisfies<Context> {
         asyncContext: (() async throws -> Context)? = nil,
         using specification: Spec
     ) where Spec.T == Context {
-        self.contextFactory = context
-        self.asyncContextFactory = asyncContext ?? {
+        contextFactory = context
+        asyncContextFactory = asyncContext ?? {
             context()
         }
         self.specification = AnySpecification(specification)
@@ -164,9 +163,9 @@ public struct Satisfies<Context> {
         provider: Provider,
         using specificationType: Spec.Type
     ) where Provider.Context == Context, Spec.T == Context, Spec: ExpressibleByNilLiteral {
-        self.contextFactory = provider.currentContext
-        self.asyncContextFactory = provider.currentContextAsync
-        self.specification = AnySpecification(Spec(nilLiteral: ()))
+        contextFactory = provider.currentContext
+        asyncContextFactory = provider.currentContextAsync
+        specification = AnySpecification(Spec(nilLiteral: ()))
     }
 
     /**
@@ -185,11 +184,11 @@ public struct Satisfies<Context> {
         asyncContext: (() async throws -> Context)? = nil,
         using specificationType: Spec.Type
     ) where Spec.T == Context, Spec: ExpressibleByNilLiteral {
-        self.contextFactory = context
-        self.asyncContextFactory = asyncContext ?? {
+        contextFactory = context
+        asyncContextFactory = asyncContext ?? {
             context()
         }
-        self.specification = AnySpecification(Spec(nilLiteral: ()))
+        specification = AnySpecification(Spec(nilLiteral: ()))
     }
 
     /**
@@ -221,9 +220,9 @@ public struct Satisfies<Context> {
         provider: Provider,
         predicate: @escaping (Context) -> Bool
     ) where Provider.Context == Context {
-        self.contextFactory = provider.currentContext
-        self.asyncContextFactory = provider.currentContextAsync
-        self.specification = AnySpecification(predicate)
+        contextFactory = provider.currentContext
+        asyncContextFactory = provider.currentContextAsync
+        specification = AnySpecification(predicate)
     }
 
     /**
@@ -239,19 +238,19 @@ public struct Satisfies<Context> {
         asyncContext: (() async throws -> Context)? = nil,
         predicate: @escaping (Context) -> Bool
     ) {
-        self.contextFactory = context
-        self.asyncContextFactory = asyncContext ?? {
+        contextFactory = context
+        asyncContextFactory = asyncContext ?? {
             context()
         }
-        self.specification = AnySpecification(predicate)
+        specification = AnySpecification(predicate)
     }
 }
 
 // MARK: - AutoContextSpecification Support
 
-extension Satisfies {
+public extension Satisfies {
     /// Async evaluation using the provider's async context if available.
-    public func evaluateAsync() async throws -> Bool {
+    func evaluateAsync() async throws -> Bool {
         if let asyncContextFactory {
             let context = try await asyncContextFactory()
             return specification.isSatisfiedBy(context)
@@ -262,22 +261,21 @@ extension Satisfies {
     }
 
     /// Projected value to access helper methods like evaluateAsync.
-    public var projectedValue: Satisfies<Context> { self }
+    var projectedValue: Satisfies<Context> { self }
 }
 
 // MARK: - EvaluationContext Convenience
 
-extension Satisfies where Context == EvaluationContext {
-
+public extension Satisfies where Context == EvaluationContext {
     /// Creates a Satisfies property wrapper using the shared default context provider
     /// - Parameter specification: The specification to evaluate
-    public init<Spec: Specification>(using specification: Spec) where Spec.T == EvaluationContext {
+    init<Spec: Specification>(using specification: Spec) where Spec.T == EvaluationContext {
         self.init(provider: DefaultContextProvider.shared, using: specification)
     }
 
     /// Creates a Satisfies property wrapper using the shared default context provider
     /// - Parameter specificationType: The specification type to use
-    public init<Spec: Specification>(
+    init<Spec: Specification>(
         using specificationType: Spec.Type
     ) where Spec.T == EvaluationContext, Spec: ExpressibleByNilLiteral {
         self.init(provider: DefaultContextProvider.shared, using: specificationType)
@@ -289,19 +287,19 @@ extension Satisfies where Context == EvaluationContext {
 
     /// Creates a Satisfies property wrapper with a predicate using the shared default context provider
     /// - Parameter predicate: A predicate function that takes EvaluationContext and returns Bool
-    public init(predicate: @escaping (EvaluationContext) -> Bool) {
+    init(predicate: @escaping (EvaluationContext) -> Bool) {
         self.init(provider: DefaultContextProvider.shared, predicate: predicate)
     }
 
     /// Creates a Satisfies property wrapper from a simple boolean predicate with no context
     /// - Parameter value: A boolean value or expression
-    public init(_ value: Bool) {
+    init(_ value: Bool) {
         self.init(predicate: { _ in value })
     }
 
     /// Creates a Satisfies property wrapper that combines multiple specifications with AND logic
     /// - Parameter specifications: The specifications to combine
-    public init(allOf specifications: [AnySpecification<EvaluationContext>]) {
+    init(allOf specifications: [AnySpecification<EvaluationContext>]) {
         self.init(predicate: { context in
             specifications.allSatisfy { spec in spec.isSatisfiedBy(context) }
         })
@@ -309,7 +307,7 @@ extension Satisfies where Context == EvaluationContext {
 
     /// Creates a Satisfies property wrapper that combines multiple specifications with OR logic
     /// - Parameter specifications: The specifications to combine
-    public init(anyOf specifications: [AnySpecification<EvaluationContext>]) {
+    init(anyOf specifications: [AnySpecification<EvaluationContext>]) {
         self.init(predicate: { context in
             specifications.contains { spec in spec.isSatisfiedBy(context) }
         })
@@ -318,12 +316,11 @@ extension Satisfies where Context == EvaluationContext {
 
 // MARK: - Builder Pattern Support
 
-extension Satisfies {
-
+public extension Satisfies {
     /// Creates a builder for constructing complex specifications
     /// - Parameter provider: The context provider to use
     /// - Returns: A SatisfiesBuilder for fluent composition
-    public static func builder<Provider: ContextProviding>(
+    static func builder<Provider: ContextProviding>(
         provider: Provider
     ) -> SatisfiesBuilder<Context> where Provider.Context == Context {
         SatisfiesBuilder(provider: provider)
@@ -335,16 +332,18 @@ public struct SatisfiesBuilder<Context> {
     private let contextFactory: () -> Context
     private var specifications: [AnySpecification<Context>] = []
 
-    internal init<Provider: ContextProviding>(provider: Provider)
-    where Provider.Context == Context {
-        self.contextFactory = provider.currentContext
+    init<Provider: ContextProviding>(provider: Provider)
+        where Provider.Context == Context
+    {
+        contextFactory = provider.currentContext
     }
 
     /// Adds a specification to the builder
     /// - Parameter spec: The specification to add
     /// - Returns: Self for method chaining
     public func with<S: Specification>(_ spec: S) -> SatisfiesBuilder<Context>
-    where S.T == Context {
+        where S.T == Context
+    {
         var builder = self
         builder.specifications.append(AnySpecification(spec))
         return builder
@@ -388,13 +387,11 @@ public struct SatisfiesBuilder<Context> {
 
 // MARK: - Convenience Extensions for Common Patterns
 
-extension Satisfies where Context == EvaluationContext {
-
+public extension Satisfies where Context == EvaluationContext {
     /// Creates a specification for time-based conditions
     /// - Parameter minimumSeconds: Minimum seconds since launch
     /// - Returns: A Satisfies wrapper for launch time checking
-    public static func timeSinceLaunch(minimumSeconds: TimeInterval) -> Satisfies<EvaluationContext>
-    {
+    static func timeSinceLaunch(minimumSeconds: TimeInterval) -> Satisfies<EvaluationContext> {
         Satisfies(predicate: { context in
             context.timeSinceLaunch >= minimumSeconds
         })
@@ -405,7 +402,7 @@ extension Satisfies where Context == EvaluationContext {
     ///   - counterKey: The counter key to check
     ///   - maximum: The maximum allowed value (exclusive)
     /// - Returns: A Satisfies wrapper for counter checking
-    public static func counter(_ counterKey: String, lessThan maximum: Int) -> Satisfies<
+    static func counter(_ counterKey: String, lessThan maximum: Int) -> Satisfies<
         EvaluationContext
     > {
         Satisfies(predicate: { context in
@@ -418,7 +415,7 @@ extension Satisfies where Context == EvaluationContext {
     ///   - flagKey: The flag key to check
     ///   - expectedValue: The expected flag value
     /// - Returns: A Satisfies wrapper for flag checking
-    public static func flag(_ flagKey: String, equals expectedValue: Bool = true) -> Satisfies<
+    static func flag(_ flagKey: String, equals expectedValue: Bool = true) -> Satisfies<
         EvaluationContext
     > {
         Satisfies(predicate: { context in
@@ -431,7 +428,7 @@ extension Satisfies where Context == EvaluationContext {
     ///   - eventKey: The event key to check
     ///   - minimumInterval: The minimum time that must have passed
     /// - Returns: A Satisfies wrapper for cooldown checking
-    public static func cooldown(_ eventKey: String, minimumInterval: TimeInterval) -> Satisfies<
+    static func cooldown(_ eventKey: String, minimumInterval: TimeInterval) -> Satisfies<
         EvaluationContext
     > {
         Satisfies(predicate: { context in

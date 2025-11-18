@@ -5,11 +5,10 @@
 //  Basic smoke tests for SpecificationCore
 //
 
-import XCTest
 @testable import SpecificationCore
+import XCTest
 
 final class SpecificationCoreTests: XCTestCase {
-
     // MARK: - Core Protocol Tests
 
     func testSpecificationComposition() {

@@ -25,12 +25,11 @@ public protocol DecisionSpec {
 // MARK: - Boolean Specification Bridge
 
 /// Extension to allow any boolean Specification to be used where a DecisionSpec is expected
-extension Specification {
-
+public extension Specification {
     /// Creates a DecisionSpec that returns the given result when this specification is satisfied
     /// - Parameter result: The result to return when the specification is satisfied
     /// - Returns: A DecisionSpec that returns the given result when this specification is satisfied
-    public func returning<Result>(_ result: Result) -> BooleanDecisionAdapter<Self, Result> {
+    func returning<Result>(_ result: Result) -> BooleanDecisionAdapter<Self, Result> {
         BooleanDecisionAdapter(specification: self, result: result)
     }
 }
@@ -66,13 +65,13 @@ public struct AnyDecisionSpec<Context, Result>: DecisionSpec {
     /// Creates a type-erased decision specification
     /// - Parameter decide: The decision function
     public init(_ decide: @escaping (Context) -> Result?) {
-        self._decide = decide
+        _decide = decide
     }
 
     /// Creates a type-erased decision specification wrapping a concrete implementation
     /// - Parameter spec: The concrete decision specification to wrap
     public init<S: DecisionSpec>(_ spec: S) where S.Context == Context, S.Result == Result {
-        self._decide = spec.decide
+        _decide = spec.decide
     }
 
     public func decide(_ context: Context) -> Result? {

@@ -11,7 +11,6 @@ import Foundation
 /// This provider allows you to set up specific context scenarios
 /// and verify that specifications behave correctly under controlled conditions.
 public class MockContextProvider: ContextProviding {
-
     // MARK: - Properties
 
     /// The context that will be returned by `currentContext()`
@@ -27,13 +26,13 @@ public class MockContextProvider: ContextProviding {
 
     /// Creates a mock context provider with a default context
     public init() {
-        self.mockContext = EvaluationContext()
+        mockContext = EvaluationContext()
     }
 
     /// Creates a mock context provider with the specified context
     /// - Parameter context: The context to return from `currentContext()`
     public init(context: EvaluationContext) {
-        self.mockContext = context
+        mockContext = context
     }
 
     /// Creates a mock context provider with builder-style configuration
@@ -94,13 +93,12 @@ public class MockContextProvider: ContextProviding {
 
 // MARK: - Builder Pattern
 
-extension MockContextProvider {
-
+public extension MockContextProvider {
     /// Updates the current date in the mock context
     /// - Parameter date: The new current date
     /// - Returns: Self for method chaining
     @discardableResult
-    public func withCurrentDate(_ date: Date) -> MockContextProvider {
+    func withCurrentDate(_ date: Date) -> MockContextProvider {
         mockContext = mockContext.withCurrentDate(date)
         return self
     }
@@ -109,7 +107,7 @@ extension MockContextProvider {
     /// - Parameter counters: The new counters dictionary
     /// - Returns: Self for method chaining
     @discardableResult
-    public func withCounters(_ counters: [String: Int]) -> MockContextProvider {
+    func withCounters(_ counters: [String: Int]) -> MockContextProvider {
         mockContext = mockContext.withCounters(counters)
         return self
     }
@@ -118,7 +116,7 @@ extension MockContextProvider {
     /// - Parameter events: The new events dictionary
     /// - Returns: Self for method chaining
     @discardableResult
-    public func withEvents(_ events: [String: Date]) -> MockContextProvider {
+    func withEvents(_ events: [String: Date]) -> MockContextProvider {
         mockContext = mockContext.withEvents(events)
         return self
     }
@@ -127,7 +125,7 @@ extension MockContextProvider {
     /// - Parameter flags: The new flags dictionary
     /// - Returns: Self for method chaining
     @discardableResult
-    public func withFlags(_ flags: [String: Bool]) -> MockContextProvider {
+    func withFlags(_ flags: [String: Bool]) -> MockContextProvider {
         mockContext = mockContext.withFlags(flags)
         return self
     }
@@ -136,7 +134,7 @@ extension MockContextProvider {
     /// - Parameter userData: The new user data dictionary
     /// - Returns: Self for method chaining
     @discardableResult
-    public func withUserData(_ userData: [String: Any]) -> MockContextProvider {
+    func withUserData(_ userData: [String: Any]) -> MockContextProvider {
         mockContext = mockContext.withUserData(userData)
         return self
     }
@@ -147,7 +145,7 @@ extension MockContextProvider {
     ///   - value: The counter value
     /// - Returns: Self for method chaining
     @discardableResult
-    public func withCounter(_ key: String, value: Int) -> MockContextProvider {
+    func withCounter(_ key: String, value: Int) -> MockContextProvider {
         var counters = mockContext.counters
         counters[key] = value
         return withCounters(counters)
@@ -159,7 +157,7 @@ extension MockContextProvider {
     ///   - date: The event date
     /// - Returns: Self for method chaining
     @discardableResult
-    public func withEvent(_ key: String, date: Date) -> MockContextProvider {
+    func withEvent(_ key: String, date: Date) -> MockContextProvider {
         var events = mockContext.events
         events[key] = date
         return withEvents(events)
@@ -171,7 +169,7 @@ extension MockContextProvider {
     ///   - value: The flag value
     /// - Returns: Self for method chaining
     @discardableResult
-    public func withFlag(_ key: String, value: Bool) -> MockContextProvider {
+    func withFlag(_ key: String, value: Bool) -> MockContextProvider {
         var flags = mockContext.flags
         flags[key] = value
         return withFlags(flags)
@@ -180,14 +178,13 @@ extension MockContextProvider {
 
 // MARK: - Test Scenario Helpers
 
-extension MockContextProvider {
-
+public extension MockContextProvider {
     /// Creates a mock provider for testing launch delay scenarios
     /// - Parameters:
     ///   - timeSinceLaunch: The time since launch in seconds
     ///   - currentDate: The current date (defaults to now)
     /// - Returns: A configured MockContextProvider
-    public static func launchDelayScenario(
+    static func launchDelayScenario(
         timeSinceLaunch: TimeInterval,
         currentDate: Date = Date()
     ) -> MockContextProvider {
@@ -203,7 +200,7 @@ extension MockContextProvider {
     ///   - counterKey: The counter key
     ///   - counterValue: The counter value
     /// - Returns: A configured MockContextProvider
-    public static func counterScenario(
+    static func counterScenario(
         counterKey: String,
         counterValue: Int
     ) -> MockContextProvider {
@@ -217,7 +214,7 @@ extension MockContextProvider {
     ///   - timeSinceEvent: Time since the event occurred in seconds
     ///   - currentDate: The current date (defaults to now)
     /// - Returns: A configured MockContextProvider
-    public static func cooldownScenario(
+    static func cooldownScenario(
         eventKey: String,
         timeSinceEvent: TimeInterval,
         currentDate: Date = Date()

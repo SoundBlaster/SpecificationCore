@@ -1,7 +1,7 @@
+import SwiftDiagnostics
 import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
-import SwiftDiagnostics
 
 /// @AutoContext macro
 /// - Adds conformance to `AutoContextSpecification`
@@ -19,7 +19,6 @@ import SwiftDiagnostics
 /// they are not yet implemented. This allows the macro syntax to evolve gracefully
 /// as Swift's macro capabilities expand.
 public struct AutoContextMacro: MemberMacro {
-
     /// Argument types that can be passed to @AutoContext
     private enum AutoContextArgument {
         case none
@@ -31,12 +30,12 @@ public struct AutoContextMacro: MemberMacro {
     }
 
     // MARK: - MemberMacro
+
     public static func expansion(
         of node: AttributeSyntax,
         providingMembersOf declaration: some DeclGroupSyntax,
         in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
-
         // Parse arguments from the attribute
         let argument = parseArguments(from: node, context: context)
 
@@ -77,7 +76,8 @@ public struct AutoContextMacro: MemberMacro {
     ) -> AutoContextArgument {
         // Get the argument list from the attribute
         guard let arguments = node.arguments,
-              case let .argumentList(argList) = arguments else {
+              case let .argumentList(argList) = arguments
+        else {
             // No arguments - this is the current default behavior
             return .none
         }
@@ -114,7 +114,8 @@ public struct AutoContextMacro: MemberMacro {
         if let memberAccess = expression.as(MemberAccessExprSyntax.self) {
             // Extract the type name from the member access
             if memberAccess.declName.baseName.text == "self",
-               let baseExpr = memberAccess.base {
+               let baseExpr = memberAccess.base
+            {
                 // This is a .self expression, extract the type name
                 let typeName = baseExpr.description.trimmingCharacters(in: .whitespaces)
                 return .customProviderType(typeName)

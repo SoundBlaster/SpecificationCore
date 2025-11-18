@@ -73,12 +73,11 @@ public struct TimeSinceEventSpec: Specification {
 
 // MARK: - Convenience Extensions
 
-extension TimeSinceEventSpec {
-
+public extension TimeSinceEventSpec {
     /// Creates a specification that checks if enough time has passed since app launch
     /// - Parameter minimumInterval: The minimum time interval since launch
     /// - Returns: A TimeSinceEventSpec configured for launch time checking
-    public static func sinceAppLaunch(minimumInterval: TimeInterval) -> AnySpecification<
+    static func sinceAppLaunch(minimumInterval: TimeInterval) -> AnySpecification<
         EvaluationContext
     > {
         AnySpecification { context in
@@ -90,59 +89,57 @@ extension TimeSinceEventSpec {
     /// Creates a specification that checks if enough seconds have passed since app launch
     /// - Parameter seconds: The minimum number of seconds since launch
     /// - Returns: A TimeSinceEventSpec configured for launch time checking
-    public static func sinceAppLaunch(seconds: TimeInterval) -> AnySpecification<EvaluationContext>
-    {
+    static func sinceAppLaunch(seconds: TimeInterval) -> AnySpecification<EvaluationContext> {
         sinceAppLaunch(minimumInterval: seconds)
     }
 
     /// Creates a specification that checks if enough minutes have passed since app launch
     /// - Parameter minutes: The minimum number of minutes since launch
     /// - Returns: A TimeSinceEventSpec configured for launch time checking
-    public static func sinceAppLaunch(minutes: TimeInterval) -> AnySpecification<EvaluationContext>
-    {
+    static func sinceAppLaunch(minutes: TimeInterval) -> AnySpecification<EvaluationContext> {
         sinceAppLaunch(minimumInterval: minutes * 60)
     }
 
     /// Creates a specification that checks if enough hours have passed since app launch
     /// - Parameter hours: The minimum number of hours since launch
     /// - Returns: A TimeSinceEventSpec configured for launch time checking
-    public static func sinceAppLaunch(hours: TimeInterval) -> AnySpecification<EvaluationContext> {
+    static func sinceAppLaunch(hours: TimeInterval) -> AnySpecification<EvaluationContext> {
         sinceAppLaunch(minimumInterval: hours * 3600)
     }
 
     /// Creates a specification that checks if enough days have passed since app launch
     /// - Parameter days: The minimum number of days since launch
     /// - Returns: A TimeSinceEventSpec configured for launch time checking
-    public static func sinceAppLaunch(days: TimeInterval) -> AnySpecification<EvaluationContext> {
+    static func sinceAppLaunch(days: TimeInterval) -> AnySpecification<EvaluationContext> {
         sinceAppLaunch(minimumInterval: days * 86400)
     }
 }
 
 // MARK: - TimeInterval Extensions for Readability
 
-extension TimeInterval {
+public extension TimeInterval {
     /// Converts seconds to TimeInterval (identity function for readability)
-    public static func seconds(_ value: Double) -> TimeInterval {
+    static func seconds(_ value: Double) -> TimeInterval {
         value
     }
 
     /// Converts minutes to TimeInterval
-    public static func minutes(_ value: Double) -> TimeInterval {
+    static func minutes(_ value: Double) -> TimeInterval {
         value * 60
     }
 
     /// Converts hours to TimeInterval
-    public static func hours(_ value: Double) -> TimeInterval {
+    static func hours(_ value: Double) -> TimeInterval {
         value * 3600
     }
 
     /// Converts days to TimeInterval
-    public static func days(_ value: Double) -> TimeInterval {
+    static func days(_ value: Double) -> TimeInterval {
         value * 86400
     }
 
     /// Converts weeks to TimeInterval
-    public static func weeks(_ value: Double) -> TimeInterval {
-        value * 604800
+    static func weeks(_ value: Double) -> TimeInterval {
+        value * 604_800
     }
 }

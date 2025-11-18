@@ -127,7 +127,7 @@ public struct Decides<Context, Result> {
         using specification: S,
         fallback: Result
     ) where Provider.Context == Context, S.Context == Context, S.Result == Result {
-        self.contextFactory = provider.currentContext
+        contextFactory = provider.currentContext
         self.specification = AnyDecisionSpec(specification)
         self.fallback = fallback
     }
@@ -137,8 +137,8 @@ public struct Decides<Context, Result> {
         firstMatch pairs: [(S, Result)],
         fallback: Result
     ) where Provider.Context == Context, S.T == Context {
-        self.contextFactory = provider.currentContext
-        self.specification = AnyDecisionSpec(FirstMatchSpec.withFallback(pairs, fallback: fallback))
+        contextFactory = provider.currentContext
+        specification = AnyDecisionSpec(FirstMatchSpec.withFallback(pairs, fallback: fallback))
         self.fallback = fallback
     }
 
@@ -147,44 +147,48 @@ public struct Decides<Context, Result> {
         decide: @escaping (Context) -> Result?,
         fallback: Result
     ) where Provider.Context == Context {
-        self.contextFactory = provider.currentContext
-        self.specification = AnyDecisionSpec(decide)
+        contextFactory = provider.currentContext
+        specification = AnyDecisionSpec(decide)
         self.fallback = fallback
     }
 }
 
 // MARK: - EvaluationContext conveniences
 
-extension Decides where Context == EvaluationContext {
-    public init<S: DecisionSpec>(using specification: S, fallback: Result)
-    where S.Context == EvaluationContext, S.Result == Result {
+public extension Decides where Context == EvaluationContext {
+    init<S: DecisionSpec>(using specification: S, fallback: Result)
+        where S.Context == EvaluationContext, S.Result == Result
+    {
         self.init(provider: DefaultContextProvider.shared, using: specification, fallback: fallback)
     }
 
-    public init<S: DecisionSpec>(using specification: S, or fallback: Result)
-    where S.Context == EvaluationContext, S.Result == Result {
+    init<S: DecisionSpec>(using specification: S, or fallback: Result)
+        where S.Context == EvaluationContext, S.Result == Result
+    {
         self.init(provider: DefaultContextProvider.shared, using: specification, fallback: fallback)
     }
 
-    public init<S: Specification>(_ pairs: [(S, Result)], fallback: Result)
-    where S.T == EvaluationContext {
+    init<S: Specification>(_ pairs: [(S, Result)], fallback: Result)
+        where S.T == EvaluationContext
+    {
         self.init(provider: DefaultContextProvider.shared, firstMatch: pairs, fallback: fallback)
     }
 
-    public init<S: Specification>(_ pairs: [(S, Result)], or fallback: Result)
-    where S.T == EvaluationContext {
+    init<S: Specification>(_ pairs: [(S, Result)], or fallback: Result)
+        where S.T == EvaluationContext
+    {
         self.init(provider: DefaultContextProvider.shared, firstMatch: pairs, fallback: fallback)
     }
 
-    public init(decide: @escaping (EvaluationContext) -> Result?, fallback: Result) {
+    init(decide: @escaping (EvaluationContext) -> Result?, fallback: Result) {
         self.init(provider: DefaultContextProvider.shared, decide: decide, fallback: fallback)
     }
 
-    public init(decide: @escaping (EvaluationContext) -> Result?, or fallback: Result) {
+    init(decide: @escaping (EvaluationContext) -> Result?, or fallback: Result) {
         self.init(provider: DefaultContextProvider.shared, decide: decide, fallback: fallback)
     }
 
-    public init(
+    init(
         build: (FirstMatchSpec<EvaluationContext, Result>.Builder<EvaluationContext, Result>) ->
             FirstMatchSpec<EvaluationContext, Result>.Builder<EvaluationContext, Result>,
         fallback: Result
@@ -194,7 +198,7 @@ extension Decides where Context == EvaluationContext {
         self.init(using: spec, fallback: fallback)
     }
 
-    public init(
+    init(
         build: (FirstMatchSpec<EvaluationContext, Result>.Builder<EvaluationContext, Result>) ->
             FirstMatchSpec<EvaluationContext, Result>.Builder<EvaluationContext, Result>,
         or fallback: Result
@@ -202,29 +206,31 @@ extension Decides where Context == EvaluationContext {
         self.init(build: build, fallback: fallback)
     }
 
-    public init(_ specification: FirstMatchSpec<Context, Result>, fallback: Result) {
+    init(_ specification: FirstMatchSpec<Context, Result>, fallback: Result) {
         self.init(provider: DefaultContextProvider.shared, using: specification, fallback: fallback)
     }
 
-    public init(_ specification: FirstMatchSpec<Context, Result>, or fallback: Result) {
+    init(_ specification: FirstMatchSpec<Context, Result>, or fallback: Result) {
         self.init(provider: DefaultContextProvider.shared, using: specification, fallback: fallback)
     }
 
     // MARK: - Default value (wrappedValue) conveniences
 
-    public init(wrappedValue defaultValue: Result, _ specification: FirstMatchSpec<Context, Result>)
+    init(wrappedValue defaultValue: Result, _ specification: FirstMatchSpec<Context, Result>) {
+        self.init(
+            provider: DefaultContextProvider.shared, using: specification, fallback: defaultValue
+        )
+    }
+
+    init<S: Specification>(wrappedValue defaultValue: Result, _ pairs: [(S, Result)])
+        where S.T == EvaluationContext
     {
         self.init(
-            provider: DefaultContextProvider.shared, using: specification, fallback: defaultValue)
+            provider: DefaultContextProvider.shared, firstMatch: pairs, fallback: defaultValue
+        )
     }
 
-    public init<S: Specification>(wrappedValue defaultValue: Result, _ pairs: [(S, Result)])
-    where S.T == EvaluationContext {
-        self.init(
-            provider: DefaultContextProvider.shared, firstMatch: pairs, fallback: defaultValue)
-    }
-
-    public init(
+    init(
         wrappedValue defaultValue: Result,
         build: (FirstMatchSpec<EvaluationContext, Result>.Builder<EvaluationContext, Result>) ->
             FirstMatchSpec<EvaluationContext, Result>.Builder<EvaluationContext, Result>
@@ -234,14 +240,15 @@ extension Decides where Context == EvaluationContext {
         self.init(provider: DefaultContextProvider.shared, using: spec, fallback: defaultValue)
     }
 
-    public init<S: DecisionSpec>(wrappedValue defaultValue: Result, using specification: S)
-    where S.Context == EvaluationContext, S.Result == Result {
+    init<S: DecisionSpec>(wrappedValue defaultValue: Result, using specification: S)
+        where S.Context == EvaluationContext, S.Result == Result
+    {
         self.init(
-            provider: DefaultContextProvider.shared, using: specification, fallback: defaultValue)
+            provider: DefaultContextProvider.shared, using: specification, fallback: defaultValue
+        )
     }
 
-    public init(wrappedValue defaultValue: Result, decide: @escaping (EvaluationContext) -> Result?)
-    {
+    init(wrappedValue defaultValue: Result, decide: @escaping (EvaluationContext) -> Result?) {
         self.init(provider: DefaultContextProvider.shared, decide: decide, fallback: defaultValue)
     }
 }

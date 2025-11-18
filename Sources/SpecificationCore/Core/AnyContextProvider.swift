@@ -17,13 +17,13 @@ public struct AnyContextProvider<Context>: ContextProviding {
 
     /// Wraps a concrete context provider.
     public init<P: ContextProviding>(_ base: P) where P.Context == Context {
-        self._currentContext = base.currentContext
+        _currentContext = base.currentContext
     }
 
     /// Wraps a context-producing closure.
     /// - Parameter makeContext: Closure invoked to produce a context snapshot.
     public init(_ makeContext: @escaping () -> Context) {
-        self._currentContext = makeContext
+        _currentContext = makeContext
     }
 
     public func currentContext() -> Context { _currentContext() }

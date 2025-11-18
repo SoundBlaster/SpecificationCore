@@ -10,7 +10,7 @@ let package = Package(
         .iOS(.v13),
         .macOS(.v10_15),
         .tvOS(.v13),
-        .watchOS(.v6),
+        .watchOS(.v6)
     ],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
@@ -23,7 +23,7 @@ let package = Package(
         // Depend on the latest Swift Syntax package for macro support.
         .package(url: "https://github.com/swiftlang/swift-syntax", from: "510.0.0"),
         // Add swift-macro-testing for a simplified macro testing experience.
-        .package(url: "https://github.com/pointfreeco/swift-macro-testing", from: "0.4.0"),
+        .package(url: "https://github.com/pointfreeco/swift-macro-testing", from: "0.4.0")
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -35,7 +35,7 @@ let package = Package(
             dependencies: [
                 .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
                 .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
-                .product(name: "SwiftDiagnostics", package: "swift-syntax"),
+                .product(name: "SwiftDiagnostics", package: "swift-syntax")
             ]
         ),
 
@@ -57,8 +57,8 @@ let package = Package(
                 // Access macro types for MacroTesting
                 "SpecificationCoreMacros",
                 // Apple macro test support for diagnostics and expansions
-                .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
+                .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax")
             ]
-        ),
+        )
     ]
 )

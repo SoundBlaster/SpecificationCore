@@ -9,8 +9,8 @@ import Foundation
 
 // MARK: - Custom Operators
 
-infix operator && : LogicalConjunctionPrecedence
-infix operator || : LogicalDisjunctionPrecedence
+infix operator &&: LogicalConjunctionPrecedence
+infix operator ||: LogicalDisjunctionPrecedence
 prefix operator !
 
 // MARK: - Operator Implementations
@@ -73,7 +73,7 @@ public func alwaysFalse<T>() -> AnySpecification<T> {
 public struct SpecificationBuilder<T> {
     private let specification: AnySpecification<T>
 
-    internal init(_ specification: AnySpecification<T>) {
+    init(_ specification: AnySpecification<T>) {
         self.specification = specification
     }
 

@@ -67,7 +67,6 @@ import Foundation
 /// }
 /// ```
 public struct FirstMatchSpec<Context, Result>: DecisionSpec {
-
     /// A pair consisting of a specification and its associated result
     public typealias SpecificationPair = (specification: AnySpecification<Context>, result: Result)
 
@@ -89,7 +88,8 @@ public struct FirstMatchSpec<Context, Result>: DecisionSpec {
     /// - Parameter pairs: Specification-result pairs to evaluate in order
     /// - Parameter includeMetadata: Whether to include metadata about the matched specification
     public init<S: Specification>(_ pairs: [(S, Result)], includeMetadata: Bool = false)
-    where S.T == Context {
+        where S.T == Context
+    {
         self.pairs = pairs.map { (AnySpecification($0.0), $0.1) }
         self.includeMetadata = includeMetadata
     }
@@ -108,7 +108,8 @@ public struct FirstMatchSpec<Context, Result>: DecisionSpec {
 
     /// Evaluates the specifications in order and returns the result and metadata of the first one that is satisfied
     /// - Parameter context: The context to evaluate against
-    /// - Returns: A tuple containing the result and metadata of the first satisfied specification, or nil if none are satisfied
+    /// - Returns: A tuple containing the result and metadata of the first satisfied specification, or nil if none are
+    /// satisfied
     public func decideWithMetadata(_ context: Context) -> (result: Result, index: Int)? {
         for (index, pair) in pairs.enumerated() {
             if pair.specification.isSatisfiedBy(context) {
@@ -121,14 +122,13 @@ public struct FirstMatchSpec<Context, Result>: DecisionSpec {
 
 // MARK: - Convenience Extensions
 
-extension FirstMatchSpec {
-
+public extension FirstMatchSpec {
     /// Creates a FirstMatchSpec with a fallback result
     /// - Parameters:
     ///   - pairs: The specification-result pairs to evaluate in order
     ///   - fallback: The fallback result to return if no specification is satisfied
     /// - Returns: A FirstMatchSpec that always returns a result
-    public static func withFallback(
+    static func withFallback(
         _ pairs: [SpecificationPair],
         fallback: Result
     ) -> FirstMatchSpec<Context, Result> {
@@ -141,7 +141,7 @@ extension FirstMatchSpec {
     ///   - pairs: The specification-result pairs to evaluate in order
     ///   - fallback: The fallback result to return if no specification is satisfied
     /// - Returns: A FirstMatchSpec that always returns a result
-    public static func withFallback<S: Specification>(
+    static func withFallback<S: Specification>(
         _ pairs: [(S, Result)],
         fallback: Result
     ) -> FirstMatchSpec<Context, Result> where S.T == Context {
@@ -153,10 +153,9 @@ extension FirstMatchSpec {
 
 // MARK: - FirstMatchSpec+Builder
 
-extension FirstMatchSpec {
-
+public extension FirstMatchSpec {
     /// A builder for creating FirstMatchSpec instances using a fluent interface
-    public class Builder<C, R> {
+    class Builder<C, R> {
         private var pairs: [(AnySpecification<C>, R)] = []
         private var includeMetadata: Bool = false
 
@@ -169,7 +168,8 @@ extension FirstMatchSpec {
         ///   - result: The result to return if the specification is satisfied
         /// - Returns: The builder for method chaining
         public func add<S: Specification>(_ specification: S, result: R) -> Builder
-        where S.T == C {
+            where S.T == C
+        {
             pairs.append((AnySpecification(specification), result))
             return self
         }
@@ -204,13 +204,14 @@ extension FirstMatchSpec {
         /// - Returns: A new FirstMatchSpec
         public func build() -> FirstMatchSpec<C, R> {
             FirstMatchSpec<C, R>(
-                pairs.map { (specification: $0.0, result: $0.1) }, includeMetadata: includeMetadata)
+                pairs.map { (specification: $0.0, result: $0.1) }, includeMetadata: includeMetadata
+            )
         }
     }
 
     /// Creates a new builder for constructing a FirstMatchSpec
     /// - Returns: A builder for method chaining
-    public static func builder() -> Builder<Context, Result> {
+    static func builder() -> Builder<Context, Result> {
         Builder<Context, Result>()
     }
 }

@@ -73,33 +73,32 @@ public struct CooldownIntervalSpec: Specification {
 
 // MARK: - Convenience Factory Methods
 
-extension CooldownIntervalSpec {
-
+public extension CooldownIntervalSpec {
     /// Creates a cooldown specification for daily restrictions
     /// - Parameter eventKey: The event key to track
     /// - Returns: A CooldownIntervalSpec with a 24-hour cooldown
-    public static func daily(_ eventKey: String) -> CooldownIntervalSpec {
+    static func daily(_ eventKey: String) -> CooldownIntervalSpec {
         CooldownIntervalSpec(eventKey: eventKey, days: 1)
     }
 
     /// Creates a cooldown specification for weekly restrictions
     /// - Parameter eventKey: The event key to track
     /// - Returns: A CooldownIntervalSpec with a 7-day cooldown
-    public static func weekly(_ eventKey: String) -> CooldownIntervalSpec {
+    static func weekly(_ eventKey: String) -> CooldownIntervalSpec {
         CooldownIntervalSpec(eventKey: eventKey, days: 7)
     }
 
     /// Creates a cooldown specification for monthly restrictions (30 days)
     /// - Parameter eventKey: The event key to track
     /// - Returns: A CooldownIntervalSpec with a 30-day cooldown
-    public static func monthly(_ eventKey: String) -> CooldownIntervalSpec {
+    static func monthly(_ eventKey: String) -> CooldownIntervalSpec {
         CooldownIntervalSpec(eventKey: eventKey, days: 30)
     }
 
     /// Creates a cooldown specification for hourly restrictions
     /// - Parameter eventKey: The event key to track
     /// - Returns: A CooldownIntervalSpec with a 1-hour cooldown
-    public static func hourly(_ eventKey: String) -> CooldownIntervalSpec {
+    static func hourly(_ eventKey: String) -> CooldownIntervalSpec {
         CooldownIntervalSpec(eventKey: eventKey, hours: 1)
     }
 
@@ -108,21 +107,20 @@ extension CooldownIntervalSpec {
     ///   - eventKey: The event key to track
     ///   - interval: The custom cooldown interval
     /// - Returns: A CooldownIntervalSpec with the specified interval
-    public static func custom(_ eventKey: String, interval: TimeInterval) -> CooldownIntervalSpec {
+    static func custom(_ eventKey: String, interval: TimeInterval) -> CooldownIntervalSpec {
         CooldownIntervalSpec(eventKey: eventKey, cooldownInterval: interval)
     }
 }
 
 // MARK: - Time Remaining Utilities
 
-extension CooldownIntervalSpec {
-
+public extension CooldownIntervalSpec {
     /// Calculates the remaining cooldown time for the specified context
     /// - Parameter context: The evaluation context
     /// - Returns: The remaining cooldown time in seconds, or 0 if cooldown is complete
-    public func remainingCooldownTime(in context: EvaluationContext) -> TimeInterval {
+    func remainingCooldownTime(in context: EvaluationContext) -> TimeInterval {
         guard let lastOccurrence = context.event(for: eventKey) else {
-            return 0  // No previous occurrence, no cooldown remaining
+            return 0 // No previous occurrence, no cooldown remaining
         }
 
         let timeSinceLastOccurrence = context.currentDate.timeIntervalSince(lastOccurrence)
@@ -133,16 +131,16 @@ extension CooldownIntervalSpec {
     /// Checks if the cooldown is currently active
     /// - Parameter context: The evaluation context
     /// - Returns: True if the cooldown is still active, false otherwise
-    public func isCooldownActive(in context: EvaluationContext) -> Bool {
+    func isCooldownActive(in context: EvaluationContext) -> Bool {
         return !isSatisfiedBy(context)
     }
 
     /// Gets the next allowed time for the event
     /// - Parameter context: The evaluation context
     /// - Returns: The date when the cooldown will expire, or nil if already expired
-    public func nextAllowedTime(in context: EvaluationContext) -> Date? {
+    func nextAllowedTime(in context: EvaluationContext) -> Date? {
         guard let lastOccurrence = context.event(for: eventKey) else {
-            return nil  // No previous occurrence, already allowed
+            return nil // No previous occurrence, already allowed
         }
 
         let nextAllowed = lastOccurrence.addingTimeInterval(cooldownInterval)
@@ -152,13 +150,12 @@ extension CooldownIntervalSpec {
 
 // MARK: - Combinable with Other Cooldowns
 
-extension CooldownIntervalSpec {
-
+public extension CooldownIntervalSpec {
     /// Combines this cooldown with another cooldown using AND logic
     /// Both cooldowns must be satisfied for the combined specification to be satisfied
     /// - Parameter other: Another CooldownIntervalSpec to combine with
     /// - Returns: An AndSpecification requiring both cooldowns to be satisfied
-    public func and(_ other: CooldownIntervalSpec) -> AndSpecification<
+    func and(_ other: CooldownIntervalSpec) -> AndSpecification<
         CooldownIntervalSpec, CooldownIntervalSpec
     > {
         AndSpecification(left: self, right: other)
@@ -168,7 +165,7 @@ extension CooldownIntervalSpec {
     /// Either cooldown being satisfied will satisfy the combined specification
     /// - Parameter other: Another CooldownIntervalSpec to combine with
     /// - Returns: An OrSpecification requiring either cooldown to be satisfied
-    public func or(_ other: CooldownIntervalSpec) -> OrSpecification<
+    func or(_ other: CooldownIntervalSpec) -> OrSpecification<
         CooldownIntervalSpec, CooldownIntervalSpec
     > {
         OrSpecification(left: self, right: other)
@@ -177,8 +174,7 @@ extension CooldownIntervalSpec {
 
 // MARK: - Advanced Cooldown Patterns
 
-extension CooldownIntervalSpec {
-
+public extension CooldownIntervalSpec {
     /// Creates a specification that implements exponential backoff cooldowns
     /// The cooldown time increases exponentially with each occurrence
     /// - Parameters:
@@ -187,7 +183,7 @@ extension CooldownIntervalSpec {
     ///   - counterKey: The key for tracking occurrence count
     ///   - maxInterval: The maximum cooldown interval (optional)
     /// - Returns: An AnySpecification implementing exponential backoff
-    public static func exponentialBackoff(
+    static func exponentialBackoff(
         eventKey: String,
         baseInterval: TimeInterval,
         counterKey: String,
@@ -195,14 +191,14 @@ extension CooldownIntervalSpec {
     ) -> AnySpecification<EvaluationContext> {
         AnySpecification { context in
             guard let lastOccurrence = context.event(for: eventKey) else {
-                return true  // No previous occurrence
+                return true // No previous occurrence
             }
 
             let occurrenceCount = context.counter(for: counterKey)
             let multiplier = pow(2.0, Double(occurrenceCount - 1))
             var actualInterval = baseInterval * multiplier
 
-            if let maxInterval = maxInterval {
+            if let maxInterval {
                 actualInterval = min(actualInterval, maxInterval)
             }
 
@@ -218,15 +214,15 @@ extension CooldownIntervalSpec {
     ///   - nighttimeInterval: Cooldown interval during nighttime hours
     ///   - daytimeHours: The range of hours considered daytime (default: 6-22)
     /// - Returns: An AnySpecification with time-of-day based cooldowns
-    public static func timeOfDayBased(
+    static func timeOfDayBased(
         eventKey: String,
         daytimeInterval: TimeInterval,
         nighttimeInterval: TimeInterval,
-        daytimeHours: ClosedRange<Int> = 6...22
+        daytimeHours: ClosedRange<Int> = 6 ... 22
     ) -> AnySpecification<EvaluationContext> {
         AnySpecification { context in
             guard let lastOccurrence = context.event(for: eventKey) else {
-                return true  // No previous occurrence
+                return true // No previous occurrence
             }
 
             let currentHour = context.calendar.component(.hour, from: context.currentDate)

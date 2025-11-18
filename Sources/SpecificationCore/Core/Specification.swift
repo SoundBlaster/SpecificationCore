@@ -108,8 +108,7 @@ public protocol Specification<T> {
 ///
 /// These methods enable composition of specifications using boolean logic, allowing you to
 /// build complex business rules from simple, focused specifications.
-extension Specification {
-
+public extension Specification {
     /**
      * Creates a new specification that represents the logical AND of this specification and another.
      *
@@ -130,8 +129,9 @@ extension Specification {
      * // Returns true only if user is both adult AND citizen
      * ```
      */
-    public func and<Other: Specification>(_ other: Other) -> AndSpecification<Self, Other>
-    where Other.T == T {
+    func and<Other: Specification>(_ other: Other) -> AndSpecification<Self, Other>
+        where Other.T == T
+    {
         AndSpecification(left: self, right: other)
     }
 
@@ -155,8 +155,9 @@ extension Specification {
      * // Returns true if date is weekend OR holiday
      * ```
      */
-    public func or<Other: Specification>(_ other: Other) -> OrSpecification<Self, Other>
-    where Other.T == T {
+    func or<Other: Specification>(_ other: Other) -> OrSpecification<Self, Other>
+        where Other.T == T
+    {
         OrSpecification(left: self, right: other)
     }
 
@@ -178,7 +179,7 @@ extension Specification {
      * // Returns true if date is NOT a working day
      * ```
      */
-    public func not() -> NotSpecification<Self> {
+    func not() -> NotSpecification<Self> {
         NotSpecification(wrapped: self)
     }
 }
@@ -204,14 +205,15 @@ extension Specification {
 ///
 /// - Note: Prefer using the ``Specification/and(_:)`` method for better readability.
 public struct AndSpecification<Left: Specification, Right: Specification>: Specification
-where Left.T == Right.T {
+    where Left.T == Right.T
+{
     /// The context type that both specifications evaluate.
     public typealias T = Left.T
 
     private let left: Left
     private let right: Right
 
-    internal init(left: Left, right: Right) {
+    init(left: Left, right: Right) {
         self.left = left
         self.right = right
     }
@@ -246,14 +248,15 @@ where Left.T == Right.T {
 ///
 /// - Note: Prefer using the ``Specification/or(_:)`` method for better readability.
 public struct OrSpecification<Left: Specification, Right: Specification>: Specification
-where Left.T == Right.T {
+    where Left.T == Right.T
+{
     /// The context type that both specifications evaluate.
     public typealias T = Left.T
 
     private let left: Left
     private let right: Right
 
-    internal init(left: Left, right: Right) {
+    init(left: Left, right: Right) {
         self.left = left
         self.right = right
     }
@@ -291,7 +294,7 @@ public struct NotSpecification<Wrapped: Specification>: Specification {
 
     private let wrapped: Wrapped
 
-    internal init(wrapped: Wrapped) {
+    init(wrapped: Wrapped) {
         self.wrapped = wrapped
     }
 

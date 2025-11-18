@@ -11,7 +11,6 @@ import Foundation
 /// This provides maximum flexibility for custom business rules that don't fit
 /// into the standard specification patterns.
 public struct PredicateSpec<T>: Specification {
-
     /// The predicate function that determines if the specification is satisfied
     private let predicate: (T) -> Bool
 
@@ -34,17 +33,16 @@ public struct PredicateSpec<T>: Specification {
 
 // MARK: - Convenience Factory Methods
 
-extension PredicateSpec {
-
+public extension PredicateSpec {
     /// Creates a predicate specification that always returns true
     /// - Returns: A PredicateSpec that is always satisfied
-    public static func alwaysTrue() -> PredicateSpec<T> {
+    static func alwaysTrue() -> PredicateSpec<T> {
         PredicateSpec(description: "Always true") { _ in true }
     }
 
     /// Creates a predicate specification that always returns false
     /// - Returns: A PredicateSpec that is never satisfied
-    public static func alwaysFalse() -> PredicateSpec<T> {
+    static func alwaysFalse() -> PredicateSpec<T> {
         PredicateSpec(description: "Always false") { _ in false }
     }
 
@@ -53,7 +51,7 @@ extension PredicateSpec {
     ///   - keyPath: The KeyPath to a Boolean property
     ///   - description: An optional description
     /// - Returns: A PredicateSpec that checks the Boolean property
-    public static func keyPath(
+    static func keyPath(
         _ keyPath: KeyPath<T, Bool>,
         description: String? = nil
     ) -> PredicateSpec<T> {
@@ -68,7 +66,7 @@ extension PredicateSpec {
     ///   - value: The value to compare against
     ///   - description: An optional description
     /// - Returns: A PredicateSpec that checks for equality
-    public static func keyPath<Value: Equatable>(
+    static func keyPath<Value: Equatable>(
         _ keyPath: KeyPath<T, Value>,
         equals value: Value,
         description: String? = nil
@@ -84,7 +82,7 @@ extension PredicateSpec {
     ///   - value: The value to compare against
     ///   - description: An optional description
     /// - Returns: A PredicateSpec that checks if the property is greater than the value
-    public static func keyPath<Value: Comparable>(
+    static func keyPath<Value: Comparable>(
         _ keyPath: KeyPath<T, Value>,
         greaterThan value: Value,
         description: String? = nil
@@ -100,7 +98,7 @@ extension PredicateSpec {
     ///   - value: The value to compare against
     ///   - description: An optional description
     /// - Returns: A PredicateSpec that checks if the property is less than the value
-    public static func keyPath<Value: Comparable>(
+    static func keyPath<Value: Comparable>(
         _ keyPath: KeyPath<T, Value>,
         lessThan value: Value,
         description: String? = nil
@@ -116,7 +114,7 @@ extension PredicateSpec {
     ///   - range: The range to check against
     ///   - description: An optional description
     /// - Returns: A PredicateSpec that checks if the property is within the range
-    public static func keyPath<Value: Comparable>(
+    static func keyPath<Value: Comparable>(
         _ keyPath: KeyPath<T, Value>,
         in range: ClosedRange<Value>,
         description: String? = nil
@@ -129,14 +127,13 @@ extension PredicateSpec {
 
 // MARK: - EvaluationContext Specific Extensions
 
-extension PredicateSpec where T == EvaluationContext {
-
+public extension PredicateSpec where T == EvaluationContext {
     /// Creates a predicate that checks if enough time has passed since launch
     /// - Parameters:
     ///   - minimumTime: The minimum time since launch in seconds
     ///   - description: An optional description
     /// - Returns: A PredicateSpec for launch time checking
-    public static func timeSinceLaunch(
+    static func timeSinceLaunch(
         greaterThan minimumTime: TimeInterval,
         description: String? = nil
     ) -> PredicateSpec<EvaluationContext> {
@@ -153,7 +150,7 @@ extension PredicateSpec where T == EvaluationContext {
     ///   - value: The value to compare against
     ///   - description: An optional description
     /// - Returns: A PredicateSpec for counter checking
-    public static func counter(
+    static func counter(
         _ counterKey: String,
         _ comparison: CounterComparison,
         _ value: Int,
@@ -172,7 +169,7 @@ extension PredicateSpec where T == EvaluationContext {
     ///   - expectedValue: The expected flag value (defaults to true)
     ///   - description: An optional description
     /// - Returns: A PredicateSpec for flag checking
-    public static func flag(
+    static func flag(
         _ flagKey: String,
         equals expectedValue: Bool = true,
         description: String? = nil
@@ -187,7 +184,7 @@ extension PredicateSpec where T == EvaluationContext {
     ///   - eventKey: The event key to check
     ///   - description: An optional description
     /// - Returns: A PredicateSpec that checks for event existence
-    public static func eventExists(
+    static func eventExists(
         _ eventKey: String,
         description: String? = nil
     ) -> PredicateSpec<EvaluationContext> {
@@ -201,7 +198,7 @@ extension PredicateSpec where T == EvaluationContext {
     ///   - hourRange: The range of hours (0-23) when this should be satisfied
     ///   - description: An optional description
     /// - Returns: A PredicateSpec for time-of-day checking
-    public static func currentHour(
+    static func currentHour(
         in hourRange: ClosedRange<Int>,
         description: String? = nil
     ) -> PredicateSpec<EvaluationContext> {
@@ -214,20 +211,20 @@ extension PredicateSpec where T == EvaluationContext {
     /// Creates a predicate that checks if it's currently a weekday
     /// - Parameter description: An optional description
     /// - Returns: A PredicateSpec that is satisfied on weekdays (Monday-Friday)
-    public static func isWeekday(description: String? = nil) -> PredicateSpec<EvaluationContext> {
+    static func isWeekday(description: String? = nil) -> PredicateSpec<EvaluationContext> {
         PredicateSpec(description: description ?? "Is weekday") { context in
             let weekday = context.calendar.component(.weekday, from: context.currentDate)
-            return (2...6).contains(weekday)  // Monday = 2, Friday = 6
+            return (2 ... 6).contains(weekday) // Monday = 2, Friday = 6
         }
     }
 
     /// Creates a predicate that checks if it's currently a weekend
     /// - Parameter description: An optional description
     /// - Returns: A PredicateSpec that is satisfied on weekends (Saturday-Sunday)
-    public static func isWeekend(description: String? = nil) -> PredicateSpec<EvaluationContext> {
+    static func isWeekend(description: String? = nil) -> PredicateSpec<EvaluationContext> {
         PredicateSpec(description: description ?? "Is weekend") { context in
             let weekday = context.calendar.component(.weekday, from: context.currentDate)
-            return weekday == 1 || weekday == 7  // Sunday = 1, Saturday = 7
+            return weekday == 1 || weekday == 7 // Sunday = 1, Saturday = 7
         }
     }
 }
@@ -268,11 +265,10 @@ public enum CounterComparison {
 
 // MARK: - Collection Extensions
 
-extension Collection where Element: Specification {
-
+public extension Collection where Element: Specification {
     /// Creates a PredicateSpec that is satisfied when all specifications in the collection are satisfied
     /// - Returns: A PredicateSpec representing the AND of all specifications
-    public func allSatisfiedPredicate() -> PredicateSpec<Element.T> {
+    func allSatisfiedPredicate() -> PredicateSpec<Element.T> {
         PredicateSpec(description: "All \(count) specifications satisfied") { candidate in
             self.allSatisfy { spec in
                 spec.isSatisfiedBy(candidate)
@@ -282,7 +278,7 @@ extension Collection where Element: Specification {
 
     /// Creates a PredicateSpec that is satisfied when any specification in the collection is satisfied
     /// - Returns: A PredicateSpec representing the OR of all specifications
-    public func anySatisfiedPredicate() -> PredicateSpec<Element.T> {
+    func anySatisfiedPredicate() -> PredicateSpec<Element.T> {
         PredicateSpec(description: "Any of \(count) specifications satisfied") { candidate in
             self.contains { spec in
                 spec.isSatisfiedBy(candidate)
@@ -293,13 +289,12 @@ extension Collection where Element: Specification {
 
 // MARK: - Functional Composition
 
-extension PredicateSpec {
-
+public extension PredicateSpec {
     /// Maps the input type of the predicate specification using a transform function
     /// - Parameter transform: A function that transforms the new input type to this spec's input type
     /// - Returns: A new PredicateSpec that works with the transformed input type
-    public func contramap<U>(_ transform: @escaping (U) -> T) -> PredicateSpec<U> {
-        PredicateSpec<U>(description: self.description) { input in
+    func contramap<U>(_ transform: @escaping (U) -> T) -> PredicateSpec<U> {
+        PredicateSpec<U>(description: description) { input in
             self.isSatisfiedBy(transform(input))
         }
     }
@@ -307,8 +302,8 @@ extension PredicateSpec {
     /// Combines this predicate with another using logical AND
     /// - Parameter other: Another predicate to combine with
     /// - Returns: A new PredicateSpec that requires both predicates to be satisfied
-    public func and(_ other: PredicateSpec<T>) -> PredicateSpec<T> {
-        let combinedDescription = [self.description, other.description]
+    func and(_ other: PredicateSpec<T>) -> PredicateSpec<T> {
+        let combinedDescription = [description, other.description]
             .compactMap { $0 }
             .joined(separator: " AND ")
 
@@ -321,8 +316,8 @@ extension PredicateSpec {
     /// Combines this predicate with another using logical OR
     /// - Parameter other: Another predicate to combine with
     /// - Returns: A new PredicateSpec that requires either predicate to be satisfied
-    public func or(_ other: PredicateSpec<T>) -> PredicateSpec<T> {
-        let combinedDescription = [self.description, other.description]
+    func or(_ other: PredicateSpec<T>) -> PredicateSpec<T> {
+        let combinedDescription = [description, other.description]
             .compactMap { $0 }
             .joined(separator: " OR ")
 
@@ -334,7 +329,7 @@ extension PredicateSpec {
 
     /// Negates this predicate specification
     /// - Returns: A new PredicateSpec that is satisfied when this one is not
-    public func not() -> PredicateSpec<T> {
+    func not() -> PredicateSpec<T> {
         let negatedDescription = description.map { "NOT (\($0))" }
         return PredicateSpec(description: negatedDescription) { candidate in
             !self.isSatisfiedBy(candidate)

@@ -7,7 +7,7 @@
 
 import Foundation
 #if canImport(Combine)
-import Combine
+    import Combine
 #endif
 
 /// A protocol for types that can provide context for specification evaluation.
@@ -28,11 +28,11 @@ public protocol ContextProviding {
 // MARK: - Optional observation capability
 
 #if canImport(Combine)
-/// A provider that can emit update signals when its context may have changed.
-public protocol ContextUpdatesProviding {
-    var contextUpdates: AnyPublisher<Void, Never> { get }
-    var contextStream: AsyncStream<Void> { get }
-}
+    /// A provider that can emit update signals when its context may have changed.
+    public protocol ContextUpdatesProviding {
+        var contextUpdates: AnyPublisher<Void, Never> { get }
+        var contextStream: AsyncStream<Void> { get }
+    }
 #endif
 
 // MARK: - Generic Context Provider
@@ -54,8 +54,8 @@ public struct GenericContextProvider<Context>: ContextProviding {
 
 // MARK: - Async Convenience
 
-extension ContextProviding {
-    public func currentContextAsync() async throws -> Context {
+public extension ContextProviding {
+    func currentContextAsync() async throws -> Context {
         currentContext()
     }
 
@@ -83,11 +83,11 @@ public struct StaticContextProvider<Context>: ContextProviding {
 
 // MARK: - Convenience Extensions
 
-extension ContextProviding {
+public extension ContextProviding {
     /// Creates a specification that uses this context provider
     /// - Parameter specificationFactory: A closure that creates a specification given the context
     /// - Returns: An AnySpecification that evaluates using the provided context
-    public func specification<T>(
+    func specification<T>(
         _ specificationFactory: @escaping (Context) -> AnySpecification<T>
     ) -> AnySpecification<T> {
         AnySpecification { candidate in
@@ -100,7 +100,7 @@ extension ContextProviding {
     /// Creates a simple predicate specification using this context provider
     /// - Parameter predicate: A predicate that takes both context and candidate
     /// - Returns: An AnySpecification that evaluates the predicate with the provided context
-    public func predicate<T>(
+    func predicate<T>(
         _ predicate: @escaping (Context, T) -> Bool
     ) -> AnySpecification<T> {
         AnySpecification { candidate in

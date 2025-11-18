@@ -27,7 +27,7 @@ public struct CompositeSpec: Specification {
         let maxDisplayCount = MaxCountSpec(counterKey: "banner_shown", limit: 3)
         let cooldownPeriod = CooldownIntervalSpec(eventKey: "last_banner_shown", days: 7)
 
-        self.composite = AnySpecification(
+        composite = AnySpecification(
             timeSinceLaunch
                 .and(AnySpecification(maxDisplayCount))
                 .and(AnySpecification(cooldownPeriod))
@@ -52,7 +52,7 @@ public struct CompositeSpec: Specification {
         let maxDisplayCount = MaxCountSpec(counterKey: counterKey, limit: maxShowCount)
         let cooldownPeriod = CooldownIntervalSpec(eventKey: eventKey, days: cooldownDays)
 
-        self.composite = AnySpecification(
+        composite = AnySpecification(
             timeSinceLaunch
                 .and(AnySpecification(maxDisplayCount))
                 .and(AnySpecification(cooldownPeriod))
@@ -66,11 +66,10 @@ public struct CompositeSpec: Specification {
 
 // MARK: - Predefined Composite Specifications
 
-extension CompositeSpec {
-
+public extension CompositeSpec {
     /// A composite specification for promotional banners
     /// Shows after 30 seconds, max 2 times, with 3-day cooldown
-    public static var promoBanner: CompositeSpec {
+    static var promoBanner: CompositeSpec {
         CompositeSpec(
             minimumLaunchDelay: 30,
             maxShowCount: 2,
@@ -82,11 +81,11 @@ extension CompositeSpec {
 
     /// A composite specification for onboarding tips
     /// Shows after 5 seconds, max 5 times, with 1-hour cooldown
-    public static var onboardingTip: CompositeSpec {
+    static var onboardingTip: CompositeSpec {
         CompositeSpec(
             minimumLaunchDelay: 5,
             maxShowCount: 5,
-            cooldownDays: TimeInterval.hours(1) / 86400,  // Convert hours to days
+            cooldownDays: TimeInterval.hours(1) / 86400, // Convert hours to days
             counterKey: "onboarding_tip_count",
             eventKey: "last_onboarding_tip"
         )
@@ -94,7 +93,7 @@ extension CompositeSpec {
 
     /// A composite specification for feature announcements
     /// Shows after 60 seconds, max 1 time, no cooldown needed (since max is 1)
-    public static var featureAnnouncement: CompositeSpec {
+    static var featureAnnouncement: CompositeSpec {
         CompositeSpec(
             minimumLaunchDelay: 60,
             maxShowCount: 1,
@@ -106,7 +105,7 @@ extension CompositeSpec {
 
     /// A composite specification for rating prompts
     /// Shows after 5 minutes, max 3 times, with 2-week cooldown
-    public static var ratingPrompt: CompositeSpec {
+    static var ratingPrompt: CompositeSpec {
         CompositeSpec(
             minimumLaunchDelay: TimeInterval.minutes(5),
             maxShowCount: 3,
@@ -141,7 +140,7 @@ public struct AdvancedCompositeSpec: Specification {
 
         if requireBusinessHours {
             let businessHours = PredicateSpec<EvaluationContext>.currentHour(
-                in: 9...17,
+                in: 9 ... 17,
                 description: "Business hours"
             )
             specs.append(AnySpecification(businessHours))
@@ -165,7 +164,7 @@ public struct AdvancedCompositeSpec: Specification {
         }
 
         // Combine all specifications with AND logic
-        self.composite = specs.allSatisfied()
+        composite = specs.allSatisfied()
     }
 
     public func isSatisfiedBy(_ context: EvaluationContext) -> Bool {
@@ -204,11 +203,11 @@ public struct ECommercePromoBannerSpec: Specification {
             hours: 4
         )
         let shoppingHours = PredicateSpec<EvaluationContext>.currentHour(
-            in: 10...22,
+            in: 10 ... 22,
             description: "Shopping hours"
         )
 
-        self.composite = AnySpecification(
+        composite = AnySpecification(
             minimumActivity
                 .and(AnySpecification(productViewCount))
                 .and(AnySpecification(noPurchaseRecently))
@@ -256,7 +255,7 @@ public struct SubscriptionUpgradeSpec: Specification {
             10
         )
 
-        self.composite = AnySpecification(
+        composite = AnySpecification(
             weeklyUser
                 .and(AnySpecification(premiumFeatureUsage))
                 .and(AnySpecification(notPremiumSubscriber))
