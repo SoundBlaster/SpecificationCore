@@ -21,7 +21,7 @@
 # Organizing
 --organizetypes actor,class,enum,struct
 --structthreshold 0
---classthere 0
+--classthreshold 0
 --enumthreshold 0
 --extensionlength 0
 
