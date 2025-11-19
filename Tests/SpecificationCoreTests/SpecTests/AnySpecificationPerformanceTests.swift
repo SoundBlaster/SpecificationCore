@@ -177,6 +177,7 @@ final class AnySpecificationPerformanceTests: XCTestCase {
 
     // MARK: - Comparison Tests
 
+    #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
     func testWrappedVsDirectComparison() {
         let directSpec = FastSpec()
         let _ = AnySpecification(directSpec)
@@ -202,4 +203,5 @@ final class AnySpecificationPerformanceTests: XCTestCase {
             }
         }
     }
+    #endif
 }
