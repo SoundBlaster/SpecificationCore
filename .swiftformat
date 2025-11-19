@@ -1,0 +1,30 @@
+# SwiftFormat configuration for SpecificationCore
+
+--swiftversion 5.10
+
+# Indentation
+--indent 4
+--indentcase false
+--trimwhitespace always
+
+# Wrapping
+--maxwidth 120
+--wraparguments before-first
+--wrapparameters before-first
+--wrapcollections before-first
+
+# Spacing
+--commas inline
+--semicolons inline
+--stripunusedargs closure-only
+
+# Organizing
+--organizetypes actor,class,enum,struct
+--structthreshold 0
+--classthreshold 0
+--enumthreshold 0
+--extensionlength 0
+
+# Options
+--exclude .build,DerivedData
+--disable redundantReturn
