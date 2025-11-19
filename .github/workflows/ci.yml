@@ -2,9 +2,10 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ '**' ]  # Run on all branches to test workflow changes
   pull_request:
     branches: [ '**' ]  # Run on all pull requests regardless of target branch
+  workflow_dispatch:  # Allow manual triggering
 
 jobs:
   test-macos:
