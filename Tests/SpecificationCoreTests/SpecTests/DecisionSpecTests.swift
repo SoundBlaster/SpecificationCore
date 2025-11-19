@@ -10,7 +10,6 @@ import XCTest
 @testable import SpecificationCore
 
 final class DecisionSpecTests: XCTestCase {
-
     // Test context for discount decisions
     struct UserContext {
         var isVip: Bool
@@ -58,7 +57,7 @@ final class DecisionSpecTests: XCTestCase {
         let discountSpec = FirstMatchSpec<UserContext, Int>([
             (vipSpec, 50),
             (promoSpec, 20),
-            (birthdaySpec, 10),
+            (birthdaySpec, 10)
         ])
 
         // Act & Assert
@@ -98,7 +97,7 @@ final class DecisionSpecTests: XCTestCase {
         let discountSpec = FirstMatchSpec<UserContext, Int>([
             (firstSpec, 50),
             (secondSpec, 20),
-            (thirdSpec, 10),
+            (thirdSpec, 10)
         ])
 
         let vipContext = UserContext(isVip: true, isInPromo: false, isBirthday: false)
@@ -151,8 +150,8 @@ final class DecisionSpecTests: XCTestCase {
     func testCustomDecisionSpec_implementsLogic() {
         // Arrange
         struct RouteDecisionSpec: DecisionSpec {
-            typealias Context = String  // URL path
-            typealias Result = String  // Route name
+            typealias Context = String // URL path
+            typealias Result = String // Route name
 
             func decide(_ context: String) -> String? {
                 if context.starts(with: "/admin") {

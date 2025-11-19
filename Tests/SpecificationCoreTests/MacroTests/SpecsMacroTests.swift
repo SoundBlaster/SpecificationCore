@@ -10,7 +10,6 @@ import XCTest
 @testable import SpecificationCore
 
 final class SpecsMacroTests: XCTestCase {
-
     // MARK: - Integration Tests
 
     /// Test that simulates what the @specs macro should generate for a single specification
@@ -21,7 +20,7 @@ final class SpecsMacroTests: XCTestCase {
 
             init() {
                 let specChain = MaxCountSpec(counterKey: "test", limit: 3)
-                self.composite = AnySpecification(specChain)
+                composite = AnySpecification(specChain)
             }
 
             func isSatisfiedBy(_ candidate: EvaluationContext) -> Bool {
@@ -53,7 +52,7 @@ final class SpecsMacroTests: XCTestCase {
             init() {
                 let specChain = MaxCountSpec(counterKey: "display_count", limit: 3)
                     .and(TimeSinceEventSpec(eventKey: "last_shown", minimumInterval: 3600))
-                self.composite = AnySpecification(specChain)
+                composite = AnySpecification(specChain)
             }
 
             func isSatisfiedBy(_ candidate: EvaluationContext) -> Bool {
@@ -81,7 +80,7 @@ final class SpecsMacroTests: XCTestCase {
         XCTAssertFalse(spec.isSatisfiedBy(context2))
 
         // Test case 3: Count below limit, recent event (should fail)
-        let recentEvent = currentDate.addingTimeInterval(-1800)  // 30 minutes ago
+        let recentEvent = currentDate.addingTimeInterval(-1800) // 30 minutes ago
         let context3 = EvaluationContext(
             currentDate: currentDate,
             counters: ["display_count": 2],
@@ -90,7 +89,7 @@ final class SpecsMacroTests: XCTestCase {
         XCTAssertFalse(spec.isSatisfiedBy(context3))
 
         // Test case 4: Count below limit, old event (should pass)
-        let oldEvent = currentDate.addingTimeInterval(-7200)  // 2 hours ago
+        let oldEvent = currentDate.addingTimeInterval(-7200) // 2 hours ago
         let context4 = EvaluationContext(
             currentDate: currentDate,
             counters: ["display_count": 2],
@@ -108,8 +107,8 @@ final class SpecsMacroTests: XCTestCase {
             init() {
                 let specChain = MaxCountSpec(counterKey: "display_count", limit: 5)
                     .and(TimeSinceEventSpec(eventKey: "last_shown", minimumInterval: 86400))
-                    .and(CooldownIntervalSpec(eventKey: "user_dismissed", cooldownInterval: 604800))
-                self.composite = AnySpecification(specChain)
+                    .and(CooldownIntervalSpec(eventKey: "user_dismissed", cooldownInterval: 604_800))
+                composite = AnySpecification(specChain)
             }
 
             func isSatisfiedBy(_ candidate: EvaluationContext) -> Bool {
@@ -121,14 +120,14 @@ final class SpecsMacroTests: XCTestCase {
         let currentDate = Date()
 
         // Test case 1: All conditions satisfied
-        let oldShowEvent = currentDate.addingTimeInterval(-172800)  // 2 days ago
-        let oldDismissEvent = currentDate.addingTimeInterval(-1_209_600)  // 2 weeks ago
+        let oldShowEvent = currentDate.addingTimeInterval(-172_800) // 2 days ago
+        let oldDismissEvent = currentDate.addingTimeInterval(-1_209_600) // 2 weeks ago
         let context1 = EvaluationContext(
             currentDate: currentDate,
             counters: ["display_count": 3],
             events: [
                 "last_shown": oldShowEvent,
-                "user_dismissed": oldDismissEvent,
+                "user_dismissed": oldDismissEvent
             ]
         )
         XCTAssertTrue(spec.isSatisfiedBy(context1))
@@ -139,31 +138,31 @@ final class SpecsMacroTests: XCTestCase {
             counters: ["display_count": 5],
             events: [
                 "last_shown": oldShowEvent,
-                "user_dismissed": oldDismissEvent,
+                "user_dismissed": oldDismissEvent
             ]
         )
         XCTAssertFalse(spec.isSatisfiedBy(context2))
 
         // Test case 3: Recent show event
-        let recentShowEvent = currentDate.addingTimeInterval(-3600)  // 1 hour ago
+        let recentShowEvent = currentDate.addingTimeInterval(-3600) // 1 hour ago
         let context3 = EvaluationContext(
             currentDate: currentDate,
             counters: ["display_count": 3],
             events: [
                 "last_shown": recentShowEvent,
-                "user_dismissed": oldDismissEvent,
+                "user_dismissed": oldDismissEvent
             ]
         )
         XCTAssertFalse(spec.isSatisfiedBy(context3))
 
         // Test case 4: Recent dismiss event
-        let recentDismissEvent = currentDate.addingTimeInterval(-86400)  // 1 day ago
+        let recentDismissEvent = currentDate.addingTimeInterval(-86400) // 1 day ago
         let context4 = EvaluationContext(
             currentDate: currentDate,
             counters: ["display_count": 3],
             events: [
                 "last_shown": oldShowEvent,
-                "user_dismissed": recentDismissEvent,
+                "user_dismissed": recentDismissEvent
             ]
         )
         XCTAssertFalse(spec.isSatisfiedBy(context4))
@@ -181,7 +180,7 @@ final class SpecsMacroTests: XCTestCase {
                         PredicateSpec<EvaluationContext> { context in
                             context.flag(for: "feature_enabled")
                         })
-                self.composite = AnySpecification(specChain)
+                composite = AnySpecification(specChain)
             }
 
             func isSatisfiedBy(_ candidate: EvaluationContext) -> Bool {
@@ -229,7 +228,7 @@ final class SpecsMacroTests: XCTestCase {
             init() {
                 let specChain = MaxCountSpec.onlyOnce("first_time")
                     .and(TimeSinceEventSpec(eventKey: "app_launch", seconds: 30))
-                self.composite = AnySpecification(specChain)
+                composite = AnySpecification(specChain)
             }
 
             func isSatisfiedBy(_ candidate: EvaluationContext) -> Bool {
@@ -239,7 +238,7 @@ final class SpecsMacroTests: XCTestCase {
 
         let spec = TestSpec()
         let currentDate = Date()
-        let launchTime = currentDate.addingTimeInterval(-60)  // 1 minute ago
+        let launchTime = currentDate.addingTimeInterval(-60) // 1 minute ago
 
         // Test case 1: Never done before, enough time since launch
         let context1 = EvaluationContext(
@@ -260,7 +259,7 @@ final class SpecsMacroTests: XCTestCase {
         XCTAssertFalse(spec.isSatisfiedBy(context2))
 
         // Test case 3: Never done before, but not enough time since launch
-        let recentLaunch = currentDate.addingTimeInterval(-15)  // 15 seconds ago
+        let recentLaunch = currentDate.addingTimeInterval(-15) // 15 seconds ago
         let context3 = EvaluationContext(
             currentDate: currentDate,
             launchDate: recentLaunch,
@@ -282,7 +281,7 @@ final class SpecsMacroTests: XCTestCase {
 
             init() {
                 let specChain = PredicateSpec<EvaluationContext>.alwaysTrue()
-                self.composite = AnySpecification(specChain)
+                composite = AnySpecification(specChain)
             }
 
             func isSatisfiedBy(_ candidate: EvaluationContext) -> Bool {
@@ -304,7 +303,7 @@ final class SpecsMacroTests: XCTestCase {
 
             init() {
                 let specChain = MaxCountSpec(counterKey: "test", limit: 1)
-                self.composite = AnySpecification(specChain)
+                composite = AnySpecification(specChain)
             }
 
             func isSatisfiedBy(_ candidate: EvaluationContext) -> Bool {

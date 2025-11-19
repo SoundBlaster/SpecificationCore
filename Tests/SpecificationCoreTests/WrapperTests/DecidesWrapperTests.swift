@@ -3,11 +3,10 @@
 //  SpecificationCoreTests
 //
 
-import XCTest
 @testable import SpecificationCore
+import XCTest
 
 final class DecidesWrapperTests: XCTestCase {
-
     override func setUp() {
         super.setUp()
         DefaultContextProvider.shared.clearAll()
@@ -54,7 +53,7 @@ final class DecidesWrapperTests: XCTestCase {
         // When: use default value shorthand for fallback
         @Decides(FirstMatchSpec([
             (vip, 99)
-        ])) var discount: Int = 0
+        ])) var discount = 0
 
         // Then: no match -> returns default value
         XCTAssertEqual(discount, 0)
@@ -128,7 +127,7 @@ final class DecidesWrapperTests: XCTestCase {
         DefaultContextProvider.shared.setFlag("vip", to: true)
 
         // When: default value shorthand with pairs
-        @Decides([(vip, 9)]) var result: Int = 1
+        @Decides([(vip, 9)]) var result = 1
 
         // Then: match beats default
         XCTAssertEqual(result, 9)

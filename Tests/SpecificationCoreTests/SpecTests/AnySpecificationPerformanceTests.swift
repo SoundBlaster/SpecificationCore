@@ -3,7 +3,6 @@ import XCTest
 @testable import SpecificationCore
 
 final class AnySpecificationPerformanceTests: XCTestCase {
-
     // MARK: - Test Specifications
 
     private struct FastSpec: Specification {
@@ -17,7 +16,7 @@ final class AnySpecificationPerformanceTests: XCTestCase {
         typealias Context = String
         func isSatisfiedBy(_ context: String) -> Bool {
             // Simulate some work
-            let _ = (0..<100).map { $0 * $0 }
+            let _ = (0 ..< 100).map { $0 * $0 }
             return context.contains("test")
         }
     }
@@ -69,7 +68,7 @@ final class AnySpecificationPerformanceTests: XCTestCase {
         let context = "test string with more than 5 characters"
 
         measure {
-            for _ in 0..<1000 {
+            for _ in 0 ..< 1000 {
                 _ = specs.allSatisfy { $0.isSatisfiedBy(context) }
             }
         }
@@ -78,12 +77,13 @@ final class AnySpecificationPerformanceTests: XCTestCase {
     func testAnySatisfyPerformance() {
         // Create array with mostly false specs and one true at the end
         var specs: [AnySpecification<String>] = Array(
-            repeating: AnySpecification { _ in false }, count: 99)
+            repeating: AnySpecification { _ in false }, count: 99
+        )
         specs.append(AnySpecification(FastSpec()))
         let context = "test string with more than 5 characters"
 
         measure {
-            for _ in 0..<1000 {
+            for _ in 0 ..< 1000 {
                 _ = specs.contains { $0.isSatisfiedBy(context) }
             }
         }
@@ -130,7 +130,7 @@ final class AnySpecificationPerformanceTests: XCTestCase {
         let spec = FastSpec()
 
         measure {
-            for _ in 0..<10000 {
+            for _ in 0 ..< 10000 {
                 let anySpec = AnySpecification(spec)
                 _ = anySpec.isSatisfiedBy("test")
             }
@@ -144,10 +144,10 @@ final class AnySpecificationPerformanceTests: XCTestCase {
             AnySpecification<String> { $0.count > 3 },
             AnySpecification<String> { $0.contains("test") },
             AnySpecification<String> { !$0.isEmpty },
-            AnySpecification(FastSpec()),
+            AnySpecification(FastSpec())
         ]
 
-        let contexts = (0..<5000).map { "test string \($0)" }
+        let contexts = (0 ..< 5000).map { "test string \($0)" }
 
         measure {
             for context in contexts {
@@ -178,30 +178,30 @@ final class AnySpecificationPerformanceTests: XCTestCase {
     // MARK: - Comparison Tests
 
     #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
-    func testWrappedVsDirectComparison() {
-        let directSpec = FastSpec()
-        let _ = AnySpecification(directSpec)
-        let context = "test string with sufficient length"
+        func testWrappedVsDirectComparison() {
+            let directSpec = FastSpec()
+            _ = AnySpecification(directSpec)
+            let context = "test string with sufficient length"
 
-        // Baseline: Direct specification
-        measure(metrics: [XCTCPUMetric(), XCTMemoryMetric()]) {
-            for _ in 0..<100000 {
-                _ = directSpec.isSatisfiedBy(context)
+            // Baseline: Direct specification
+            measure(metrics: [XCTCPUMetric(), XCTMemoryMetric()]) {
+                for _ in 0 ..< 100_000 {
+                    _ = directSpec.isSatisfiedBy(context)
+                }
             }
         }
-    }
 
-    func testWrappedSpecificationOverhead() {
-        let directSpec = FastSpec()
-        let wrappedSpec = AnySpecification(directSpec)
-        let context = "test string with sufficient length"
+        func testWrappedSpecificationOverhead() {
+            let directSpec = FastSpec()
+            let wrappedSpec = AnySpecification(directSpec)
+            let context = "test string with sufficient length"
 
-        // Test: Wrapped specification
-        measure(metrics: [XCTCPUMetric(), XCTMemoryMetric()]) {
-            for _ in 0..<100000 {
-                _ = wrappedSpec.isSatisfiedBy(context)
+            // Test: Wrapped specification
+            measure(metrics: [XCTCPUMetric(), XCTMemoryMetric()]) {
+                for _ in 0 ..< 100_000 {
+                    _ = wrappedSpec.isSatisfiedBy(context)
+                }
             }
         }
-    }
     #endif
 }

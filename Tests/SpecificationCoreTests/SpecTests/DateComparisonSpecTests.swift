@@ -1,5 +1,5 @@
-import XCTest
 @testable import SpecificationCore
+import XCTest
 
 final class DateComparisonSpecTests: XCTestCase {
     func test_DateComparisonSpec_before_after() {

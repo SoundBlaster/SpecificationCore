@@ -18,7 +18,8 @@ final class SatisfiesWrapperTests: XCTestCase {
         struct Harness {
             @Satisfies(
                 context: ManualContext(isEnabled: true, threshold: 3, count: 0),
-                using: EnabledSpec())
+                using: EnabledSpec()
+            )
             var isEnabled: Bool
         }
 
@@ -108,7 +109,8 @@ final class SatisfiesWrapperTests: XCTestCase {
         // When
         @Satisfies(
             provider: mockProvider,
-            using: CooldownIntervalSpec(eventKey: "dialog", cooldownInterval: 20))
+            using: CooldownIntervalSpec(eventKey: "dialog", cooldownInterval: 20)
+        )
         var canShowDialog: Bool
 
         // Then

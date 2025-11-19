@@ -10,7 +10,6 @@ import XCTest
 @testable import SpecificationCore
 
 final class FirstMatchSpecTests: XCTestCase {
-
     // Test context
     struct UserContext {
         var isVip: Bool
@@ -44,7 +43,7 @@ final class FirstMatchSpecTests: XCTestCase {
 
         let spec = FirstMatchSpec<UserContext, Int>([
             (vipSpec, 50),
-            (promoSpec, 20),
+            (promoSpec, 20)
         ])
 
         let context = UserContext(isVip: true, isInPromo: true, isBirthday: false)
@@ -65,7 +64,7 @@ final class FirstMatchSpecTests: XCTestCase {
 
         let spec = FirstMatchSpec<UserContext, Int>([
             (vipSpec, 50),
-            (promoSpec, 20),
+            (promoSpec, 20)
         ])
 
         let context = UserContext(isVip: false, isInPromo: false, isBirthday: true)

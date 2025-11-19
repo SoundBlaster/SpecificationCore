@@ -1,5 +1,5 @@
-import XCTest
 @testable import SpecificationCore
+import XCTest
 
 final class DateRangeSpecTests: XCTestCase {
     func test_DateRangeSpec_inclusiveRange() {

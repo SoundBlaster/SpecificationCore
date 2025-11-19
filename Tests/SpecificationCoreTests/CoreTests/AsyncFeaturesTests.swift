@@ -1,8 +1,7 @@
-import XCTest
 @testable import SpecificationCore
+import XCTest
 
 final class AsyncFeaturesTests: XCTestCase {
-
     func test_ContextProviding_asyncDefault_returnsContext() async throws {
         let provider = DefaultContextProvider.shared
         provider.clearAll()
@@ -71,8 +70,10 @@ final class AsyncFeaturesTests: XCTestCase {
         provider.clearAll()
 
         struct Harness {
-            @Satisfies(provider: DefaultContextProvider.shared,
-                       predicate: { $0.flag(for: "gate") })
+            @Satisfies(
+                provider: DefaultContextProvider.shared,
+                predicate: { $0.flag(for: "gate") }
+            )
             var gated: Bool
 
             func evaluate() async throws -> Bool {

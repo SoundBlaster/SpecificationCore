@@ -1,5 +1,5 @@
-import XCTest
 @testable import SpecificationCore
+import XCTest
 
 final class AsyncSatisfiesWrapperTests: XCTestCase {
     func test_AsyncSatisfies_evaluate_withPredicate() async throws {
@@ -8,8 +8,10 @@ final class AsyncSatisfiesWrapperTests: XCTestCase {
         provider.setFlag("async_flag", to: true)
 
         struct Harness {
-            @AsyncSatisfies(provider: DefaultContextProvider.shared,
-                            predicate: { $0.flag(for: "async_flag") })
+            @AsyncSatisfies(
+                provider: DefaultContextProvider.shared,
+                predicate: { $0.flag(for: "async_flag") }
+            )
             var on: Bool?
         }
 
@@ -25,8 +27,10 @@ final class AsyncSatisfiesWrapperTests: XCTestCase {
         provider.setCounter("attempts", to: 0)
 
         struct Harness {
-            @AsyncSatisfies(provider: DefaultContextProvider.shared,
-                            using: MaxCountSpec(counterKey: "attempts", limit: 1))
+            @AsyncSatisfies(
+                provider: DefaultContextProvider.shared,
+                using: MaxCountSpec(counterKey: "attempts", limit: 1)
+            )
             var canProceed: Bool?
         }
 

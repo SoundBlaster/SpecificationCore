@@ -3,11 +3,10 @@
 //  SpecificationCoreTests
 //
 
-import XCTest
 @testable import SpecificationCore
+import XCTest
 
 final class MaybeWrapperTests: XCTestCase {
-
     override func setUp() {
         super.setUp()
         // Ensure a clean provider state before each test
