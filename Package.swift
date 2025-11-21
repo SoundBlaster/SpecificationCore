@@ -23,7 +23,9 @@ let package = Package(
         // Depend on the latest Swift Syntax package for macro support.
         .package(url: "https://github.com/swiftlang/swift-syntax", from: "510.0.0"),
         // Add swift-macro-testing for a simplified macro testing experience.
-        .package(url: "https://github.com/pointfreeco/swift-macro-testing", from: "0.4.0")
+        .package(url: "https://github.com/pointfreeco/swift-macro-testing", from: "0.4.0"),
+        // Add Swift-DocC Plugin for documentation generation
+        .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.0.0")
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
