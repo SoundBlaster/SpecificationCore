@@ -1,0 +1,79 @@
+@Tutorial(time: 20) {
+    @Intro(title: "Property Wrappers for Declarative Evaluation") {
+        Learn how to use SpecificationCore's property wrappers for clean, declarative specification evaluation. Property wrappers like ``Satisfies``, ``Decides``, and ``Maybe`` simplify specification usage throughout your application.
+    }
+
+    @Section(title: "@Satisfies Basics") {
+        @ContentAndMedia {
+            The ``Satisfies`` property wrapper automatically handles context retrieval and specification evaluation, providing a simple boolean property.
+        }
+
+        @Steps {
+            @Step {
+                Use @Satisfies with a built-in specification.
+
+                @Code(name: "SatisfiesExample.swift", file: "property-wrappers-01-satisfies-basic.swift")
+            }
+
+            @Step {
+                Use @Satisfies with inline predicates for simple conditions.
+
+                @Code(name: "SatisfiesExample.swift", file: "property-wrappers-01-satisfies-basic-02.swift")
+            }
+        }
+    }
+
+    @Section(title: "Decision Specifications") {
+        @ContentAndMedia {
+            Use ``Decides`` for specifications that return typed values instead of booleans, and ``Maybe`` for optional results with fallbacks.
+        }
+
+        @Steps {
+            @Step {
+                Use @Decides to route to different values based on conditions.
+
+                @Code(name: "DecisionExample.swift", file: "property-wrappers-02-decides.swift")
+            }
+
+            @Step {
+                Use @Maybe for optional results with default fallbacks.
+
+                @Code(name: "MaybeExample.swift", file: "property-wrappers-02-maybe.swift")
+            }
+        }
+    }
+
+    @Section(title: "Async Specifications") {
+        @ContentAndMedia {
+            Use ``AsyncSatisfies`` for specifications that require asynchronous evaluation.
+        }
+
+        @Steps {
+            @Step {
+                Create async specifications with @AsyncSatisfies.
+
+                @Code(name: "AsyncExample.swift", file: "property-wrappers-03-async.swift")
+            }
+        }
+    }
+
+    @Section(title: "Advanced Patterns") {
+        @ContentAndMedia {
+            Combine property wrappers with builder patterns and projected values for maximum flexibility.
+        }
+
+        @Steps {
+            @Step {
+                Use the builder pattern for complex specifications.
+
+                @Code(name: "AdvancedExample.swift", file: "property-wrappers-04-advanced.swift")
+            }
+
+            @Step {
+                Use convenience factory methods.
+
+                @Code(name: "FactoryExample.swift", file: "property-wrappers-04-advanced-02.swift")
+            }
+        }
+    }
+}

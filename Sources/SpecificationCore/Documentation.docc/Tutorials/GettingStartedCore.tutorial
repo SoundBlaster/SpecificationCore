@@ -1,0 +1,153 @@
+@Tutorial(time: 25) {
+    @Intro(title: "Getting Started with SpecificationCore") {
+        Learn how to implement the Specification Pattern in Swift using SpecificationCore. Create your first specifications, compose rules with logical operators, and evaluate them with context providers.
+
+        The Specification Pattern helps you:
+        - Separate business logic from UI and data layers
+        - Create reusable and composable business rules
+        - Write more testable code
+        - Maintain clean architecture
+    }
+
+    @Section(title: "Understanding Specifications") {
+        @ContentAndMedia {
+            A specification encapsulates a business rule that can be evaluated against a candidate. The ``Specification`` protocol is the foundation of SpecificationCore.
+        }
+
+        @Steps {
+            @Step {
+                Import SpecificationCore and define a model to evaluate.
+
+                @Code(name: "MyFirstSpec.swift", file: "getting-started-01-first-spec.swift")
+            }
+
+            @Step {
+                Create your first specification by implementing the ``Specification`` protocol.
+
+                @Code(name: "MyFirstSpec.swift", file: "getting-started-01-first-spec-02.swift")
+            }
+
+            @Step {
+                Test the specification with sample data.
+
+                @Code(name: "MyFirstSpec.swift", file: "getting-started-01-first-spec-03.swift")
+            }
+        }
+    }
+
+    @Section(title: "Using Context and Providers") {
+        @ContentAndMedia {
+            ``EvaluationContext`` provides runtime data like events, counters, and timestamps. Use ``DefaultContextProvider`` to manage context across your app.
+        }
+
+        @Steps {
+            @Step {
+                Create a context provider and record events.
+
+                @Code(name: "ContextExample.swift", file: "getting-started-02-with-context.swift")
+            }
+
+            @Step {
+                Use built-in specifications that leverage context data.
+
+                @Code(name: "ContextExample.swift", file: "getting-started-02-with-context-02.swift")
+            }
+        }
+    }
+
+    @Section(title: "Composing Specifications") {
+        @ContentAndMedia {
+            Combine specifications using logical operators (AND, OR, NOT) to build complex business rules from simple primitives.
+        }
+
+        @Steps {
+            @Step {
+                Create multiple simple specifications.
+
+                @Code(name: "CompositionExample.swift", file: "getting-started-03-composition.swift")
+            }
+
+            @Step {
+                Combine specifications using operators.
+
+                @Code(name: "CompositionExample.swift", file: "getting-started-03-composition-02.swift")
+            }
+
+            @Step {
+                Test the composed specification.
+
+                @Code(name: "CompositionExample.swift", file: "getting-started-03-composition-03.swift")
+            }
+        }
+    }
+
+    @Section(title: "Built-in Specifications") {
+        @ContentAndMedia {
+            SpecificationCore provides ready-to-use specifications for common patterns like rate limiting, time-based rules, and feature flags.
+        }
+
+        @Steps {
+            @Step {
+                Use ``MaxCountSpec`` for rate limiting.
+
+                @Code(name: "BuiltInSpecs.swift", file: "getting-started-04-built-in-specs.swift")
+            }
+
+            @Step {
+                Use ``TimeSinceEventSpec`` for cooldown periods.
+
+                @Code(name: "BuiltInSpecs.swift", file: "getting-started-04-built-in-specs-02.swift")
+            }
+
+            @Step {
+                Combine built-in specs for complex rules.
+
+                @Code(name: "BuiltInSpecs.swift", file: "getting-started-04-built-in-specs-03.swift")
+            }
+        }
+    }
+
+    @Section(title: "Testing Specifications") {
+        @ContentAndMedia {
+            Use ``MockContextProvider`` to create predictable test scenarios for your specifications.
+        }
+
+        @Steps {
+            @Step {
+                Write unit tests using MockContextProvider.
+
+                @Code(name: "SpecTests.swift", file: "getting-started-05-testing.swift")
+            }
+        }
+    }
+
+    @Assessments {
+        @MultipleChoice {
+            What protocol do you implement to create a custom specification?
+
+            @Choice(isCorrect: false) {
+                `BusinessRule`
+
+                @Justification(reaction: "Try again!") {
+                    SpecificationCore uses the `Specification` protocol.
+                }
+            }
+
+            @Choice(isCorrect: true) {
+                `Specification`
+
+                @Justification(reaction: "Correct!") {
+                    The `Specification` protocol is the foundation for all business rules in SpecificationCore.
+                }
+            }
+
+            @Choice(isCorrect: false) {
+                `Rule`
+
+                @Justification(reaction: "Try again!") {
+                    SpecificationCore uses the `Specification` protocol.
+                }
+            }
+        }
+    }
+}

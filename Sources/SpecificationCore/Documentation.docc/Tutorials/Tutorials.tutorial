@@ -1,0 +1,31 @@
+@Tutorials(name: "SpecificationCore Tutorials") {
+    @Intro(title: "Learn the Specification Pattern") {
+        Master the Specification pattern in Swift using SpecificationCore. Learn to build testable, composable business rules from simple primitives to advanced macro-assisted patterns.
+    }
+
+    @Chapter(name: "Getting Started") {
+        Create and compose your first specifications using SpecificationCore's foundational types.
+
+        @TutorialReference(tutorial: "doc:GettingStartedCore")
+    }
+
+    @Chapter(name: "Property Wrappers") {
+        Use declarative property wrappers for clean, reactive specification evaluation.
+
+        @TutorialReference(tutorial: "doc:PropertyWrappersGuide")
+    }
+
+    @Chapter(name: "Macros and Advanced Patterns") {
+        Leverage Swift macros for elegant specification composition and complex business rules.
+
+        @TutorialReference(tutorial: "doc:MacrosAndAdvanced")
+    }
+
+    @Resources {
+        Explore the complete SpecificationCore API documentation.
+
+        @SampleCode(destination: "https://github.com/anthropics/specification-core") {
+            Browse the source code and examples.
+        }
+    }
+}

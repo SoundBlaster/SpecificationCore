@@ -1,0 +1,115 @@
+@Tutorial(time: 25) {
+    @Intro(title: "Macros and Advanced Composition") {
+        Learn how to use Swift macros for elegant specification composition and build complex, real-world business rules. This tutorial covers the @specs and @AutoContext macros along with advanced testing patterns.
+    }
+
+    @Section(title: "@specs Macro for Composition") {
+        @ContentAndMedia {
+            The `@specs` macro enables declarative composition of specifications, reducing boilerplate and improving readability.
+        }
+
+        @Steps {
+            @Step {
+                Create composite specifications declaratively with @specs.
+
+                @Code(name: "SpecsMacroExample.swift", file: "macros-01-specs-basic.swift")
+            }
+
+            @Step {
+                Build complex multi-condition specifications.
+
+                @Code(name: "ComplexSpecsExample.swift", file: "macros-01-specs-complex.swift")
+            }
+        }
+    }
+
+    @Section(title: "@AutoContext Macro") {
+        @ContentAndMedia {
+            The `@AutoContext` macro automatically injects context provider access into your specifications, enabling cleaner evaluation patterns.
+        }
+
+        @Steps {
+            @Step {
+                Use @AutoContext for automatic provider injection.
+
+                @Code(name: "AutoContextExample.swift", file: "macros-02-auto-context.swift")
+            }
+
+            @Step {
+                Combine @specs and @AutoContext for maximum expressiveness.
+
+                @Code(name: "CombinedMacrosExample.swift", file: "macros-02-combined.swift")
+            }
+        }
+    }
+
+    @Section(title: "Complex Real-World Specifications") {
+        @ContentAndMedia {
+            Build production-ready specifications for common use cases like promotional banners, subscription upgrades, and feature gating.
+        }
+
+        @Steps {
+            @Step {
+                Create e-commerce promotional specifications.
+
+                @Code(name: "ECommerceSpec.swift", file: "macros-03-ecommerce.swift")
+            }
+
+            @Step {
+                Build subscription and access control specifications.
+
+                @Code(name: "SubscriptionSpec.swift", file: "macros-03-subscription.swift")
+            }
+        }
+    }
+
+    @Section(title: "Testing and Best Practices") {
+        @ContentAndMedia {
+            Use ``MockContextProvider`` to create predictable, isolated test scenarios for complex specifications.
+        }
+
+        @Steps {
+            @Step {
+                Test complex specifications with MockContextProvider.
+
+                @Code(name: "SpecificationTests.swift", file: "macros-04-testing.swift")
+            }
+
+            @Step {
+                Follow best practices for specification design.
+
+                @Code(name: "BestPractices.swift", file: "macros-04-best-practices.swift")
+            }
+        }
+    }
+
+    @Assessments {
+        @MultipleChoice {
+            What is the primary benefit of using composite specifications?
+
+            @Choice(isCorrect: false) {
+                They execute faster than simple specifications.
+
+                @Justification(reaction: "Try again!") {
+                    Performance is similar; the benefit is in code organization.
+                }
+            }
+
+            @Choice(isCorrect: true) {
+                They encapsulate complex business rules into reusable components.
+
+                @Justification(reaction: "Correct!") {
+                    Composite specifications bundle related rules together, improving maintainability and reusability.
+                }
+            }
+
+            @Choice(isCorrect: false) {
+                They automatically persist state.
+
+                @Justification(reaction: "Try again!") {
+                    Specifications are stateless; state is managed by context providers.
+                }
+            }
+        }
+    }
+}
