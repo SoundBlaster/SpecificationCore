@@ -516,8 +516,6 @@ let valid = EmailValidSpec()
 ### Builder Pattern
 
 - ``SpecificationBuilder``
-- ``build(_:)-swift.func`` (from specification)
-- ``build(_:)-swift.func.1`` (from predicate)
 
 ### Related Concepts
 

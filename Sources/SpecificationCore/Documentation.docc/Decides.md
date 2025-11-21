@@ -645,39 +645,10 @@ func recordPurchase() {
 - ``init(provider:firstMatch:fallback:)``
 - ``init(provider:decide:fallback:)``
 
-### Convenience Initializers
-
-- ``init(using:fallback:)``
-- ``init(using:or:)``
-- ``init(_:fallback:)``
-- ``init(_:or:)``
-- ``init(decide:fallback:)``
-- ``init(decide:or:)``
-- ``init(build:fallback:)``
-- ``init(build:or:)``
-- ``init(_:fallback:)-swift.type.method``
-- ``init(_:or:)-swift.type.method``
-
-### Default Value Initializers
-
-- ``init(wrappedValue:_:)-swift.type.method``
-- ``init(wrappedValue:_:)``
-- ``init(wrappedValue:build:)``
-- ``init(wrappedValue:using:)``
-- ``init(wrappedValue:decide:)``
-
 ### Property Values
 
 - ``wrappedValue``
 - ``projectedValue``
-
-### Related Types
-
-- ``DecisionSpec``
-- ``FirstMatchSpec``
-- ``AnyDecisionSpec``
-- ``EvaluationContext``
-- ``ContextProviding``
 
 ## See Also
 

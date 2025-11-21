@@ -692,12 +692,6 @@ func testB() {
 - ``contextUpdates``
 - ``contextStream``
 
-### Related Types
-
-- ``EvaluationContext``
-- ``MockContextProvider``
-- ``ContextProviding``
-
 ## See Also
 
 - <doc:EvaluationContext>

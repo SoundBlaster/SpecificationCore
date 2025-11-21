@@ -13,7 +13,7 @@ struct SubscriptionManager {
         provider: DefaultContextProvider.shared,
         using: FirstMatchSpec(cases: [
             (AnySpecification { $0.flag(for: "is_premium") }, SubscriptionTier.premium),
-            (AnySpecification { $0.flag(for: "is_basic") }, SubscriptionTier.basic),
+            (AnySpecification { $0.flag(for: "is_basic") }, SubscriptionTier.basic)
         ]),
         default: .free
     )

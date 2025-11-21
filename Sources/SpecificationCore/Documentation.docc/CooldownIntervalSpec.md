@@ -630,13 +630,6 @@ if !canPerformAction {
 - ``eventKey``
 - ``cooldownInterval``
 
-### Related Types
-
-- ``EvaluationContext``
-- ``DefaultContextProvider``
-- ``MockContextProvider``
-- ``TimeSinceEventSpec``
-
 ## See Also
 
 - <doc:TimeSinceEventSpec>

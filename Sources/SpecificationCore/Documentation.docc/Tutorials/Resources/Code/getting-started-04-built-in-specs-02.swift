@@ -5,7 +5,7 @@ let provider = DefaultContextProvider.shared
 // TimeSinceEventSpec: Check time elapsed since an event
 let cooldownSpec = TimeSinceEventSpec(
     eventKey: "last_notification",
-    minimumInterval: 3600  // 1 hour in seconds
+    minimumInterval: 3600 // 1 hour in seconds
 )
 
 // Record when we showed a notification

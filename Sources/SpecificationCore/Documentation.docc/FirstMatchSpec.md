@@ -476,13 +476,6 @@ let spec = FirstMatchSpec<User, String>([
 
 ## Topics
 
-### Creating Specifications
-
-- ``init(_:includeMetadata:)``
-- ``init(_:includeMetadata:)-swift.init.1``
-- ``withFallback(_:fallback:)``
-- ``withFallback(_:fallback:)-swift.type.method.1``
-
 ### Builder Pattern
 
 - ``Builder``
@@ -491,25 +484,9 @@ let spec = FirstMatchSpec<User, String>([
 ### Decision Methods
 
 - ``decide(_:)``
-- ``decideWithMetadata(_:)``
-
-### Supporting Types
-
-- ``SpecificationPair``
-
-### Property Wrappers
-
-- ``Decides``
-- ``Maybe``
-
-### Related Types
-
-- ``DecisionSpec``
-- ``Specification``
 
 ## See Also
 
 - <doc:DecisionSpec>
-- ``Decides``
-- ``Maybe``
-- ``PredicateSpec``
+- <doc:Decides>
+- <doc:Maybe>

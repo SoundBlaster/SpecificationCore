@@ -21,11 +21,5 @@
         @TutorialReference(tutorial: "doc:MacrosAndAdvanced")
     }
 
-    @Resources {
-        Explore the complete SpecificationCore API documentation.
 
-        @SampleCode(destination: "https://github.com/anthropics/specification-core") {
-            Browse the source code and examples.
-        }
-    }
 }

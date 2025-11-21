@@ -6,7 +6,7 @@ struct ContentManager {
         provider: DefaultContextProvider.shared,
         using: FirstMatchSpec(cases: [
             (AnySpecification { $0.flag(for: "show_promo_a") }, "Summer Sale!"),
-            (AnySpecification { $0.flag(for: "show_promo_b") }, "Holiday Discount!"),
+            (AnySpecification { $0.flag(for: "show_promo_b") }, "Holiday Discount!")
         ])
     )
     var promoMessage: String?
@@ -25,4 +25,4 @@ let provider = DefaultContextProvider.shared
 provider.setFlag("show_promo_a", to: true)
 
 let manager = ContentManager()
-manager.displayPromo()  // "Promo: Summer Sale!"
+manager.displayPromo() // "Promo: Summer Sale!"

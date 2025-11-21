@@ -620,12 +620,6 @@ func testLazyEvaluation() {
 - ``counterScenario(counterKey:counterValue:)``
 - ``cooldownScenario(eventKey:timeSinceEvent:currentDate:)``
 
-### Related Types
-
-- ``EvaluationContext``
-- ``DefaultContextProvider``
-- ``ContextProviding``
-
 ## See Also
 
 - <doc:EvaluationContext>

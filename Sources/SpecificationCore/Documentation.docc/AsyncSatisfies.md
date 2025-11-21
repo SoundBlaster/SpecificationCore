@@ -798,29 +798,18 @@ Consider caching at the provider or application level for frequently accessed as
 
 ## Topics
 
-### Creating Property Wrappers
+### Property Values
 
-- ``init(provider:using:)-29rld``
-- ``init(provider:predicate:)``
-- ``init(provider:using:)-8c1q7``
+- ``wrappedValue``
 
 ### Async Evaluation
 
 - ``Projection``
-- ``Projection/evaluate()``
 - ``projectedValue``
 
 ### Property Values
 
 - ``wrappedValue``
-
-### Related Types
-
-- ``AsyncSpecification``
-- ``AnyAsyncSpecification``
-- ``Specification``
-- ``EvaluationContext``
-- ``ContextProviding``
 
 ## See Also
 

@@ -373,10 +373,6 @@ typealias Result = Int  // What does the number mean?
 - ``Decides``
 - ``Maybe``
 
-### Related Protocols
-
-- ``Specification``
-
 ## See Also
 
 - <doc:Specification>

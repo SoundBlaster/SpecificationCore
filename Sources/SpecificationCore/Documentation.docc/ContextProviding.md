@@ -443,30 +443,8 @@ class CachingProvider: ContextProviding {
 - ``GenericContextProvider``
 - ``StaticContextProvider``
 
-### Factory Functions
-
-- ``contextProvider(_:)``
-- ``staticContext(_:)``
-
-### Creating Specifications
-
-- ``specification(_:)``
-- ``predicate(_:)``
-
-### Standard Context
-
-- ``EvaluationContext``
-- ``DefaultContextProvider``
-- ``MockContextProvider``
-
-### Related Concepts
-
-- ``Specification``
-- ``AutoContext``
-
 ## See Also
 
 - <doc:EvaluationContext>
 - <doc:DefaultContextProvider>
 - <doc:MockContextProvider>
-- ``AutoContext``

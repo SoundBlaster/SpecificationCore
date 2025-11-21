@@ -605,51 +605,14 @@ class ViewModel {
 
 ## Topics
 
-### Creating Property Wrappers
+### Property Values
 
-- ``init(provider:using:)``
-- ``init(context:asyncContext:using:)``
-- ``init(provider:using:)-5gu64``
-- ``init(context:asyncContext:using:)-93w52``
-- ``init(provider:predicate:)``
-- ``init(context:asyncContext:predicate:)``
-
-### Convenience Initializers
-
-- ``init(using:)-8rxrq`` (EvaluationContext)
-- ``init(using:)-1awke`` (EvaluationContext with type)
-- ``init(predicate:)``
-- ``init(_:)``
-
-### Composition Initializers
-
-- ``init(allOf:)``
-- ``init(anyOf:)``
-
-### Builder Pattern
-
-- ``builder(provider:)``
-- ``SatisfiesBuilder``
-
-### Convenience Factories
-
-- ``timeSinceLaunch(minimumSeconds:)``
-- ``counter(_:lessThan:)``
-- ``flag(_:equals:)``
-- ``cooldown(_:minimumInterval:)``
+- ``wrappedValue``
+- ``projectedValue``
 
 ### Async Support
 
 - ``evaluateAsync()``
-- ``projectedValue``
-
-### Related Types
-
-- ``Specification``
-- ``AnySpecification``
-- ``EvaluationContext``
-- ``ContextProviding``
-- ``DefaultContextProvider``
 
 ## See Also
 

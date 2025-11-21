@@ -533,12 +533,6 @@ let start = DateComponents(year: 2025, month: 12, day: 1).date!
 
 - ``init(start:end:)``
 
-### Related Types
-
-- ``EvaluationContext``
-- ``DateComparisonSpec``
-- ``TimeSinceEventSpec``
-
 ## See Also
 
 - <doc:DateComparisonSpec>

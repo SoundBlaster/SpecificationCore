@@ -543,8 +543,8 @@ let refundEligible = PredicateSpec<Order> { order in
 
 - ``keyPath(_:description:)`` (Boolean)
 - ``keyPath(_:equals:description:)`` (Equatable)
-- ``keyPath(_:greaterThan:description:)`` (Comparable)
-- ``keyPath(_:lessThan:description:)`` (Comparable)
+- ``keyPath(_:greaterThan:description:)``
+- ``keyPath(_:lessThan:description:)``
 - ``keyPath(_:in:description:)`` (Range)
 
 ### EvaluationContext Helpers
@@ -575,5 +575,4 @@ let refundEligible = PredicateSpec<Order> { order in
 ## See Also
 
 - <doc:Specification>
-- ``AnySpecification``
 - <doc:EvaluationContext>

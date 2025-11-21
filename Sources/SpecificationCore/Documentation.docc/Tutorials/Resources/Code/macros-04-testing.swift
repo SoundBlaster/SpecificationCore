@@ -2,7 +2,6 @@ import SpecificationCore
 import XCTest
 
 final class ComplexSpecificationTests: XCTestCase {
-
     var mockProvider: MockContextProvider!
 
     override func setUp() {
@@ -25,7 +24,7 @@ final class ComplexSpecificationTests: XCTestCase {
     func testPromoSpecHidesAfterRecentPurchase() {
         // Setup: User has purchased recently
         mockProvider.setCounter("products_viewed", to: 5)
-        mockProvider.recordEvent("last_purchase")  // Just now
+        mockProvider.recordEvent("last_purchase") // Just now
 
         let spec = ECommercePromoSpec()
         let context = mockProvider.currentContext()

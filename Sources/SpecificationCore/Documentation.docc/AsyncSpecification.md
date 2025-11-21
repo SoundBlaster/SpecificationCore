@@ -409,11 +409,7 @@ func isSatisfiedBy(_ user: User) async throws -> Bool {
 
 ### Bridging
 
-- ``AnyAsyncSpecification/init(_:)`` (from Specification)
-
-### Related Protocols
-
-- ``Specification``
+- ``AnyAsyncSpecification``
 
 ## See Also
 

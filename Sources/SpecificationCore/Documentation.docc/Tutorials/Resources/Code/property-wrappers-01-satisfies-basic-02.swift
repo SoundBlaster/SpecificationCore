@@ -14,7 +14,7 @@ struct FeatureManager {
     // Combine conditions with allOf
     @Satisfies(allOf: [
         AnySpecification(MaxCountSpec(counterKey: "banner_shown", maximumCount: 3)),
-        AnySpecification { context in context.flag(for: "banners_enabled") },
+        AnySpecification { context in context.flag(for: "banners_enabled") }
     ])
     var canShowBannerWithFlag: Bool
 

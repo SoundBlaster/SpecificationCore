@@ -517,12 +517,6 @@ provider.incrementCounter("actions")  // Might exceed limit
 - ``counterKey``
 - ``maximumCount``
 
-### Related Types
-
-- ``EvaluationContext``
-- ``DefaultContextProvider``
-- ``MockContextProvider``
-
 ## See Also
 
 - <doc:EvaluationContext>

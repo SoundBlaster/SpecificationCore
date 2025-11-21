@@ -426,10 +426,9 @@ let combined = builder.build()
 
 ## Topics
 
-### Creating Type-Erased Specs
+### Evaluating Specifications
 
-- ``init(_:)-swift.init`` (from Specification)
-- ``init(_:)-swift.init.1`` (from closure)
+- ``isSatisfiedBy(_:)``
 
 ### Constant Specifications
 
@@ -438,30 +437,13 @@ let combined = builder.build()
 - ``constantTrue()``
 - ``constantFalse()``
 
-### Collection Extensions
-
-- ``allSatisfied()``
-- ``anySatisfied()``
-
 ### Helper Types
 
 - ``AlwaysTrueSpec``
 - ``AlwaysFalseSpec``
 
-### Global Functions
-
-- ``spec(_:)``
-- ``alwaysTrue()``
-- ``alwaysFalse()``
-
-### Related Types
-
-- ``Specification``
-- ``AnyAsyncSpecification``
-- ``AnyDecisionSpec``
-
 ## See Also
 
 - <doc:Specification>
-- ``AnyAsyncSpecification``
-- ``AnyDecisionSpec``
+- <doc:AnyAsyncSpecification>
+- <doc:AnyDecisionSpec>

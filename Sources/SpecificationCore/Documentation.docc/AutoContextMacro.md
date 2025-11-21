@@ -1,4 +1,4 @@
-# ``SpecificationCore/AutoContext``
+# @AutoContext Macro
 
 A macro that automatically provides context provider conformance and enables convenient async specification evaluation.
 
@@ -689,19 +689,9 @@ if try await AutoSpec().isSatisfied {
 
 ## Topics
 
-### Macro Usage
-
-- ``AutoContext``
-
 ### Related Macros
 
-- ``specs(_:)``
-
-### Related Types
-
-- ``Specification``
-- ``DefaultContextProvider``
-- ``EvaluationContext``
+- <doc:SpecsMacro>
 
 ## See Also
 

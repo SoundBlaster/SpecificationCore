@@ -496,12 +496,6 @@ if !result {
 
 - ``Comparison``
 
-### Related Types
-
-- ``EvaluationContext``
-- ``DateRangeSpec``
-- ``TimeSinceEventSpec``
-
 ## See Also
 
 - <doc:DateRangeSpec>

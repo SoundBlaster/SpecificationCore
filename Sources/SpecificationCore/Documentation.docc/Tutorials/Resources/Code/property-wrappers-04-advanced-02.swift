@@ -31,5 +31,5 @@ provider.setFlag("dark_mode", to: true)
 provider.setCounter("views", to: 2)
 
 let example = ConvenienceExample()
-print("Dark mode: \(example.isDarkModeEnabled)")  // true
-print("Can show views: \(example.canShowMoreViews)")  // true
+print("Dark mode: \(example.isDarkModeEnabled)") // true
+print("Can show views: \(example.canShowMoreViews)") // true

@@ -2,7 +2,6 @@ import SpecificationCore
 import XCTest
 
 final class SpecificationTests: XCTestCase {
-
     func testMaxCountSpec() {
         // Create a fresh provider for testing
         let provider = MockContextProvider()

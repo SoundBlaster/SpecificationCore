@@ -34,4 +34,4 @@ let usResidentSpec = USResidentSpec()
 let eligibleSpec = adultSpec.and(premiumSpec.or(usResidentSpec))
 
 // User must NOT be a minor
-let notMinorSpec = adultSpec.not().not()  // Same as adultSpec
+let notMinorSpec = adultSpec.not().not() // Same as adultSpec

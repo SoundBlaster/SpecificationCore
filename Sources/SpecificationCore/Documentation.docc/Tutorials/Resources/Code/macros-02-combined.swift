@@ -4,7 +4,6 @@ import SpecificationCore
 
 // Create a reusable specification factory
 enum SpecificationFactory {
-
     // Promotional content specifications
     static func promoBanner(
         maxShows: Int = 3,

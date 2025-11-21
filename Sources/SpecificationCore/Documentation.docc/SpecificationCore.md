@@ -128,8 +128,8 @@ var discountType: String
 
 ### Macros
 
-- ``specs(_:)``
-- ``AutoContext``
+- <doc:SpecsMacro>
+- <doc:AutoContextMacro>
 
 ### Composition and Operators
 

@@ -62,7 +62,7 @@ struct TierAccessSpec: Specification {
         }
         let tierOrder = ["free", "basic", "premium", "enterprise"]
         guard let userIndex = tierOrder.firstIndex(of: userTier),
-            let requiredIndex = tierOrder.firstIndex(of: requiredTier)
+              let requiredIndex = tierOrder.firstIndex(of: requiredTier)
         else {
             return false
         }

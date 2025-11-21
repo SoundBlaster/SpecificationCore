@@ -20,5 +20,5 @@ let adultSpec = AdultUserSpec()
 let alice = User(name: "Alice", age: 25, isPremium: false)
 let bob = User(name: "Bob", age: 16, isPremium: true)
 
-print(adultSpec.isSatisfiedBy(alice))  // true
-print(adultSpec.isSatisfiedBy(bob))  // false
+print(adultSpec.isSatisfiedBy(alice)) // true
+print(adultSpec.isSatisfiedBy(bob)) // false

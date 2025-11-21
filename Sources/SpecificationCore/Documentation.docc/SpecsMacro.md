@@ -1,4 +1,4 @@
-# ``SpecificationCore/specs``
+# @specs Macro
 
 A macro that generates composite specifications by combining multiple specification instances with AND logic.
 
@@ -611,11 +611,11 @@ struct MacroCompositeSpec: Specification {
 
 ### Macro Usage
 
-- ``specs(_:)``
+
 
 ### Related Macros
 
-- ``AutoContext``
+- <doc:AutoContextMacro>
 
 ### Related Types
 

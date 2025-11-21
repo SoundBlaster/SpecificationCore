@@ -673,14 +673,6 @@ applyTheme(guaranteedTheme)  // Always applies a theme
 - ``wrappedValue``
 - ``projectedValue``
 
-### Related Types
-
-- ``DecisionSpec``
-- ``FirstMatchSpec``
-- ``AnyDecisionSpec``
-- ``EvaluationContext``
-- ``ContextProviding``
-
 ## See Also
 
 - <doc:Decides>

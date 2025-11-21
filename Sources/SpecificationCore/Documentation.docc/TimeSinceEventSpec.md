@@ -568,13 +568,6 @@ let canNotify = CooldownIntervalSpec(
 - ``eventKey``
 - ``minimumInterval``
 
-### Related Types
-
-- ``EvaluationContext``
-- ``DefaultContextProvider``
-- ``MockContextProvider``
-- ``CooldownIntervalSpec``
-
 ## See Also
 
 - <doc:CooldownIntervalSpec>
