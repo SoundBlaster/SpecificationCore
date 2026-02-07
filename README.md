@@ -10,7 +10,7 @@ Platform-independent foundation for the Specification Pattern in Swift.
 
 **SpecificationCore** is a lightweight, platform-independent Swift package that provides the foundational components for building specification-based systems. It contains core protocols, type erasure wrappers, context providers, basic specifications, property wrappers, and macros necessary for implementing the Specification Pattern across all Swift platforms.
 
-This package is extracted from [SpecificationKit](https://github.com/yourusername/SpecificationKit) to provide a minimal, dependency-free core that can be used independently or as a foundation for platform-specific extensions.
+This package is extracted from [SpecificationKit](https://github.com/SoundBlaster/SpecificationKit) to provide a minimal, dependency-free core that can be used independently or as a foundation for platform-specific extensions.
 
 ## Features
 
@@ -64,7 +64,7 @@ Add SpecificationCore to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/yourusername/SpecificationCore.git", from: "0.1.0")
+    .package(url: "https://github.com/SoundBlaster/SpecificationCore.git", from: "0.1.0")
 ]
 ```
 
@@ -205,7 +205,7 @@ If you only need core functionality without platform-specific features, use **Sp
 
 ## Documentation
 
-- [API Documentation](https://yourusername.github.io/SpecificationCore/documentation/specificationcore/)
+- [API Documentation](https://soundblaster.github.io/SpecificationCore/documentation/specificationcore/)
 - [Migration Guide](MIGRATION.md)
 - [Contributing Guidelines](CONTRIBUTING.md)
 
@@ -244,4 +244,4 @@ SpecificationCore is released under the MIT License. See [LICENSE](LICENSE) for 
 
 ## Acknowledgments
 
-SpecificationCore is extracted from [SpecificationKit](https://github.com/yourusername/SpecificationKit) to provide a platform-independent foundation for specification-based systems in Swift.
+SpecificationCore is extracted from [SpecificationKit](https://github.com/SoundBlaster/SpecificationKit) to provide a platform-independent foundation for specification-based systems in Swift.
