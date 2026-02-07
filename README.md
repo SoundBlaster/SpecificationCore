@@ -206,8 +206,6 @@ If you only need core functionality without platform-specific features, use **Sp
 ## Documentation
 
 - [API Documentation](https://soundblaster.github.io/SpecificationCore/documentation/specificationcore/)
-- [Migration Guide](MIGRATION.md)
-- [Contributing Guidelines](CONTRIBUTING.md)
 
 ## Performance
 
