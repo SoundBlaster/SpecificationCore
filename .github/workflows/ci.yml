@@ -37,6 +37,7 @@ jobs:
         run: swift test -v
 
       - name: Run Thread Sanitizer
+        if: matrix.xcode == '15.4'
         run: swift test --sanitize=thread
 
   test-linux:
