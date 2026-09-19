@@ -5,12 +5,11 @@
 //  Created by SpecificationKit on 2025.
 //
 
+@testable import SpecificationCore
 import XCTest
 
-@testable import SpecificationCore
-
 final class FirstMatchSpecTests: XCTestCase {
-    // Test context
+    /// Test context
     struct UserContext {
         var isVip: Bool
         var isInPromo: Bool
@@ -116,5 +115,21 @@ final class FirstMatchSpecTests: XCTestCase {
 
         let noneContext = UserContext(isVip: false, isInPromo: false, isBirthday: false)
         XCTAssertEqual(spec.decide(noneContext), 0)
+    }
+
+    func test_builder_buildPreservesOrderAndMetadata() {
+        let spec = FirstMatchSpec<UserContext, Int>.builder()
+            .add(PredicateSpec<UserContext> { $0.isVip }, result: 50)
+            .add(PredicateSpec<UserContext> { $0.isInPromo }, result: 20)
+            .withMetadata()
+            .build()
+
+        let matchingContext = UserContext(isVip: true, isInPromo: true, isBirthday: false)
+        XCTAssertEqual(spec.decide(matchingContext), 50)
+        XCTAssertEqual(spec.decideWithMetadata(matchingContext)?.result, 50)
+        XCTAssertEqual(spec.decideWithMetadata(matchingContext)?.index, 0)
+
+        let secondMatchContext = UserContext(isVip: false, isInPromo: true, isBirthday: false)
+        XCTAssertEqual(spec.decideWithMetadata(secondMatchContext)?.index, 1)
     }
 }

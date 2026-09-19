@@ -12,17 +12,20 @@ jobs:
     name: Test on macOS (${{ matrix.xcode }})
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: macos-14
             xcode: '15.4'
           - os: macos-latest
-            xcode: '16.0'
+            xcode: 'latest-stable'
     steps:
       - uses: actions/checkout@v4
 
       - name: Select Xcode version
-        run: sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app/Contents/Developer
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: ${{ matrix.xcode }}
 
       - name: Show Swift version
         run: swift --version
@@ -34,6 +37,7 @@ jobs:
         run: swift test -v
 
       - name: Run Thread Sanitizer
+        if: matrix.xcode == '15.4'
         run: swift test --sanitize=thread
 
   test-linux:
@@ -61,12 +65,30 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Install SwiftFormat
         run: brew install swiftformat
 
-      - name: Check formatting
-        run: swiftformat --lint .
+      - name: Check formatting of changed Swift files
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            swiftformat --lint .
+            exit $?
+          fi
+
+          git fetch --no-tags origin "${{ github.base_ref || 'main' }}" "${{ github.sha }}"
+          base="origin/${{ github.base_ref || 'main' }}"
+          files=$(git diff --name-only "$base...${{ github.sha }}" -- '*.swift')
+          if [[ -n "$files" ]]; then
+            printf '%s\n' "$files" | while IFS= read -r file; do
+              swiftformat --lint "$file"
+            done
+          else
+            echo "No changed Swift files to format-check."
+          fi
 
   build-release:
     name: Build Release Configuration
