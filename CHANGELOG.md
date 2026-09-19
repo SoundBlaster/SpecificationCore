@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-09-19
+
+### Changed
+- `FirstMatchSpec.Builder.build()` now explicitly constructs `SpecificationPair` values without changing the public API.
+- CI validates changed Swift files and tests against maintained macOS and Linux toolchains.
+
+### Fixed
+- Resolve an ambiguous initializer call in `FirstMatchSpec.Builder.build()` on Swift 6.4 and newer.
+- Correct macOS CI Xcode selection for current GitHub-hosted runners.
+
+## [1.0.0] - 2025-11-19
+
 ### Added
 - Initial extraction of platform-independent core from SpecificationKit
 - Core protocols: Specification, DecisionSpec, AsyncSpecification, ContextProviding
@@ -34,7 +46,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 - N/A (initial release)
-
-## [0.1.0] - TBD
-
-Initial release of SpecificationCore - platform-independent foundation for the Specification Pattern in Swift.
