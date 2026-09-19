@@ -64,6 +64,8 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Install SwiftFormat
         run: brew install swiftformat
@@ -76,11 +78,13 @@ jobs:
             exit $?
           fi
 
-          git fetch origin "${{ github.base_ref || 'main' }}"
+          git fetch --no-tags origin "${{ github.base_ref || 'main' }}" "${{ github.sha }}"
           base="origin/${{ github.base_ref || 'main' }}"
-          mapfile -t files < <(git diff --name-only "$base...HEAD" -- '*.swift')
-          if ((${#files[@]})); then
-            swiftformat --lint "${files[@]}"
+          files=$(git diff --name-only "$base...${{ github.sha }}" -- '*.swift')
+          if [[ -n "$files" ]]; then
+            printf '%s\n' "$files" | while IFS= read -r file; do
+              swiftformat --lint "$file"
+            done
           else
             echo "No changed Swift files to format-check."
           fi
