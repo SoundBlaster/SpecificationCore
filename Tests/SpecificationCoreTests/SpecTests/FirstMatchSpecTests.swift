@@ -5,12 +5,11 @@
 //  Created by SpecificationKit on 2025.
 //
 
+@testable import SpecificationCore
 import XCTest
 
-@testable import SpecificationCore
-
 final class FirstMatchSpecTests: XCTestCase {
-    // Test context
+    /// Test context
     struct UserContext {
         var isVip: Bool
         var isInPromo: Bool
