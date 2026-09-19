@@ -203,9 +203,10 @@ public extension FirstMatchSpec {
         /// Builds a FirstMatchSpec with the configured pairs
         /// - Returns: A new FirstMatchSpec
         public func build() -> FirstMatchSpec<C, R> {
-            FirstMatchSpec<C, R>(
-                pairs.map { (specification: $0.0, result: $0.1) }, includeMetadata: includeMetadata
-            )
+            let specificationPairs: [FirstMatchSpec<C, R>.SpecificationPair] = pairs.map {
+                (specification: $0.0, result: $0.1)
+            }
+            return FirstMatchSpec<C, R>(specificationPairs, includeMetadata: includeMetadata)
         }
     }
 
