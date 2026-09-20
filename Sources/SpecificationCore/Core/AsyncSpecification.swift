@@ -76,26 +76,26 @@ public protocol AsyncSpecification {
 
 public extension AsyncSpecification {
     /// Creates an asynchronous specification that requires both specifications to be satisfied.
-    func and<Other: AsyncSpecification>(_ other: Other) -> AsyncAndSpecification<Self, Other>
+    func andAsync<Other: AsyncSpecification>(_ other: Other) -> AsyncAndSpecification<Self, Other>
         where Other.T == T
     {
         AsyncAndSpecification(left: self, right: other)
     }
 
     /// Creates an asynchronous specification that is satisfied when either specification is satisfied.
-    func or<Other: AsyncSpecification>(_ other: Other) -> AsyncOrSpecification<Self, Other>
+    func orAsync<Other: AsyncSpecification>(_ other: Other) -> AsyncOrSpecification<Self, Other>
         where Other.T == T
     {
         AsyncOrSpecification(left: self, right: other)
     }
 
     /// Creates an asynchronous specification that negates this specification.
-    func not() -> AsyncNotSpecification<Self> {
+    func notAsync() -> AsyncNotSpecification<Self> {
         AsyncNotSpecification(wrapped: self)
     }
 
     /// Returns the given result when this asynchronous specification is satisfied.
-    func returning<Result>(_ result: Result) -> AsyncBooleanDecisionAdapter<Self, Result> {
+    func returningAsync<Result>(_ result: Result) -> AsyncBooleanDecisionAdapter<Self, Result> {
         AsyncBooleanDecisionAdapter(specification: self, result: result)
     }
 }
@@ -144,7 +144,9 @@ public struct AsyncOrSpecification<Left: AsyncSpecification, Right: AsyncSpecifi
         try Task.checkCancellation()
         let leftIsSatisfied = try await left.isSatisfiedBy(candidate)
         try Task.checkCancellation()
-        if leftIsSatisfied { return true }
+        if leftIsSatisfied {
+            return true
+        }
         try Task.checkCancellation()
         let rightIsSatisfied = try await right.isSatisfiedBy(candidate)
         try Task.checkCancellation()

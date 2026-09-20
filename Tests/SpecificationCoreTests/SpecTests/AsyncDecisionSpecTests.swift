@@ -2,9 +2,19 @@
 import XCTest
 
 final class AsyncDecisionSpecTests: XCTestCase {
+    private struct DualSpecification: Specification, AsyncSpecification {
+        func isSatisfiedBy(_ candidate: Int) -> Bool {
+            candidate > 0
+        }
+
+        func isSatisfiedBy(_ candidate: Int) async throws -> Bool {
+            candidate > 0
+        }
+    }
+
     func testAsyncDecisionAdapterReturnsResultOnlyWhenSatisfied() async throws {
         let specification = AnyAsyncSpecification<Int> { $0 > 10 }
-        let decision = specification.returning("large")
+        let decision = specification.returningAsync("large")
 
         let largeResult = try await decision.decide(11)
         let smallResult = try await decision.decide(10)
@@ -78,13 +88,41 @@ final class AsyncDecisionSpecTests: XCTestCase {
             return true
         }
 
-        let andResult = try await falseSpecification.and(secondSpecification).isSatisfiedBy(0)
+        let andResult = try await falseSpecification.andAsync(secondSpecification).isSatisfiedBy(0)
         XCTAssertEqual(secondEvaluations, 0)
-        let orResult = try await falseSpecification.or(secondSpecification).isSatisfiedBy(0)
-        let notResult = try await falseSpecification.not().isSatisfiedBy(0)
+        let orResult = try await falseSpecification.orAsync(secondSpecification).isSatisfiedBy(0)
+        let notResult = try await falseSpecification.notAsync().isSatisfiedBy(0)
         XCTAssertFalse(andResult)
         XCTAssertTrue(orResult)
         XCTAssertTrue(notResult)
+    }
+
+    func testDualConformingSpecificationKeepsSyncAndAsyncOperationsUnambiguous() async throws {
+        let specification = DualSpecification()
+        let syncAnd = specification.and(specification)
+        let syncOr = specification.or(specification)
+        let syncNot = specification.not()
+        let syncDecision = specification.returning("positive")
+
+        XCTAssertTrue(syncAnd.isSatisfiedBy(1))
+        XCTAssertTrue(syncOr.isSatisfiedBy(1))
+        XCTAssertFalse(syncNot.isSatisfiedBy(1))
+        XCTAssertEqual(syncDecision.decide(1), "positive")
+
+        let asyncAnd = specification.andAsync(specification)
+        let asyncOr = specification.orAsync(specification)
+        let asyncNot = specification.notAsync()
+        let asyncDecision = specification.returningAsync("positive")
+
+        let asyncAndResult = try await asyncAnd.isSatisfiedBy(1)
+        let asyncOrResult = try await asyncOr.isSatisfiedBy(1)
+        let asyncNotResult = try await asyncNot.isSatisfiedBy(1)
+        let asyncDecisionResult = try await asyncDecision.decide(1)
+
+        XCTAssertTrue(asyncAndResult)
+        XCTAssertTrue(asyncOrResult)
+        XCTAssertFalse(asyncNotResult)
+        XCTAssertEqual(asyncDecisionResult, "positive")
     }
 
     func testAsyncFirstMatchPropagatesErrors() async {

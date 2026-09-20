@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Asynchronous typed decision specifications, first-match evaluation, and short-circuit composition for async specifications.
+- Asynchronous typed decision specifications, first-match evaluation, and short-circuit composition through `andAsync`, `orAsync`, `notAsync`, and `returningAsync`.
 
 ## [1.0.1] - 2026-09-19
 
