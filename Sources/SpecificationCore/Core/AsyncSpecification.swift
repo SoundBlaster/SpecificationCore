@@ -72,6 +72,104 @@ public protocol AsyncSpecification {
     func isSatisfiedBy(_ candidate: T) async throws -> Bool
 }
 
+// MARK: - Composition
+
+public extension AsyncSpecification {
+    /// Creates an asynchronous specification that requires both specifications to be satisfied.
+    func and<Other: AsyncSpecification>(_ other: Other) -> AsyncAndSpecification<Self, Other>
+        where Other.T == T
+    {
+        AsyncAndSpecification(left: self, right: other)
+    }
+
+    /// Creates an asynchronous specification that is satisfied when either specification is satisfied.
+    func or<Other: AsyncSpecification>(_ other: Other) -> AsyncOrSpecification<Self, Other>
+        where Other.T == T
+    {
+        AsyncOrSpecification(left: self, right: other)
+    }
+
+    /// Creates an asynchronous specification that negates this specification.
+    func not() -> AsyncNotSpecification<Self> {
+        AsyncNotSpecification(wrapped: self)
+    }
+
+    /// Returns the given result when this asynchronous specification is satisfied.
+    func returning<Result>(_ result: Result) -> AsyncBooleanDecisionAdapter<Self, Result> {
+        AsyncBooleanDecisionAdapter(specification: self, result: result)
+    }
+}
+
+/// An asynchronous specification that combines two specifications using logical AND.
+public struct AsyncAndSpecification<Left: AsyncSpecification, Right: AsyncSpecification>: AsyncSpecification
+    where Left.T == Right.T
+{
+    public typealias T = Left.T
+
+    private let left: Left
+    private let right: Right
+
+    init(left: Left, right: Right) {
+        self.left = left
+        self.right = right
+    }
+
+    public func isSatisfiedBy(_ candidate: T) async throws -> Bool {
+        try Task.checkCancellation()
+        let leftIsSatisfied = try await left.isSatisfiedBy(candidate)
+        try Task.checkCancellation()
+        guard leftIsSatisfied else { return false }
+        try Task.checkCancellation()
+        let rightIsSatisfied = try await right.isSatisfiedBy(candidate)
+        try Task.checkCancellation()
+        return rightIsSatisfied
+    }
+}
+
+/// An asynchronous specification that combines two specifications using logical OR.
+public struct AsyncOrSpecification<Left: AsyncSpecification, Right: AsyncSpecification>: AsyncSpecification
+    where Left.T == Right.T
+{
+    public typealias T = Left.T
+
+    private let left: Left
+    private let right: Right
+
+    init(left: Left, right: Right) {
+        self.left = left
+        self.right = right
+    }
+
+    public func isSatisfiedBy(_ candidate: T) async throws -> Bool {
+        try Task.checkCancellation()
+        let leftIsSatisfied = try await left.isSatisfiedBy(candidate)
+        try Task.checkCancellation()
+        if leftIsSatisfied { return true }
+        try Task.checkCancellation()
+        let rightIsSatisfied = try await right.isSatisfiedBy(candidate)
+        try Task.checkCancellation()
+        return rightIsSatisfied
+    }
+}
+
+/// An asynchronous specification that negates another specification.
+public struct AsyncNotSpecification<Wrapped: AsyncSpecification>: AsyncSpecification {
+    public typealias T = Wrapped.T
+
+    private let wrapped: Wrapped
+
+    init(wrapped: Wrapped) {
+        self.wrapped = wrapped
+    }
+
+    public func isSatisfiedBy(_ candidate: T) async throws -> Bool {
+        try Task.checkCancellation()
+        let isSatisfied = try await wrapped.isSatisfiedBy(candidate)
+        try Task.checkCancellation()
+        return !isSatisfied
+    }
+}
+
 /// A type-erased wrapper for any asynchronous specification.
 ///
 /// `AnyAsyncSpecification` allows you to store async specifications of different
