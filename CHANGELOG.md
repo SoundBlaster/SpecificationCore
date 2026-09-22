@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-09-23
+
+### Added
+- Opt-in `Tracing` SwiftPM trait with structured specification evaluation events, a thread-safe recorder, default recording, custom tracing macros, and named sync/async wrappers.
+- Async named modifiers `tracedAsync(_:)` and `withoutTracingAsync()` for specifications and decisions.
+
+### Changed
+- Raise the minimum Swift tools version from 5.10 to 6.1 to support SwiftPM traits. The package remains in Swift 5 language mode.
+- Preserve typed errors in macro-instrumented async Boolean and decision evaluations, and preserve short-circuit behavior for lazy collections when tracing is enabled.
+
 ## [1.1.0] - 2026-09-21
 
 ### Added
