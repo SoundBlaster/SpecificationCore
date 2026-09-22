@@ -119,8 +119,12 @@
         }
 
         private static var activeContext: Context? {
-            guard !recordingSuppressed else { return nil }
-            if let context { return context }
+            guard !recordingSuppressed else {
+                return nil
+            }
+            if let context {
+                return context
+            }
             return defaultRecorder.map { Context(recorder: $0, parentID: nil) }
         }
 
