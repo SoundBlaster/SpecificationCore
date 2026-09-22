@@ -25,6 +25,8 @@ let allowed = rule.isSatisfiedBy(candidate) // Existing call site remains unchan
 
 The default recorder is process-wide. Set it to `nil` to stop recording new evaluations. It keeps events in memory, so rotate or release a long-running recorder when its events are no longer needed. Instrument custom specifications with `@TracedSpecification` or `.traced(_:)` to give their calls individual spans.
 
+Use `.withoutTracing()` on a specification or decision to omit that evaluation and its nested events while preserving its behavior. An enclosing composition still records its own outcome. Use `SpecificationTraceRuntime.withoutRecording { ... }` when the whole operation must be silent.
+
 ## Isolate one evaluation
 
 ```swift

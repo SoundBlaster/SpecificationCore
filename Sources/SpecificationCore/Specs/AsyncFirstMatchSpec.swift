@@ -32,13 +32,15 @@ public struct AsyncFirstMatchSpec<Context, Result>: AsyncDecisionSpec {
                 try Task.checkCancellation()
                 for (index, pair) in pairs.enumerated() {
                     try Task.checkCancellation()
-                    let matched = try await SpecificationTraceRuntime.withBoolean("pair[\(index)]") {
-                        try await pair.specification.isSatisfiedBy(context)
-                    }
+                    let matched = try await SpecificationTraceRuntime.evaluateChild(
+                        pair.specification, context, name: "pair[\(index)]"
+                    )
                     try Task.checkCancellation()
                     if matched {
                         for skippedIndex in pairs.indices where skippedIndex > index {
-                            SpecificationTraceRuntime.skip("pair[\(skippedIndex)]")
+                            if !SpecificationTraceRuntime.isExcluded(pairs[skippedIndex].specification) {
+                                SpecificationTraceRuntime.skip("pair[\(skippedIndex)]")
+                            }
                         }
                         return (pair.result, index)
                     }

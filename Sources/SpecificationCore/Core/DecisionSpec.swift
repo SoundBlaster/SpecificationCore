@@ -53,6 +53,11 @@ public struct BooleanDecisionAdapter<S: Specification, R>: DecisionSpec {
 
     public func decide(_ context: Context) -> Result? {
         #if Tracing
+            if SpecificationTraceRuntime.isExcluded(specification) {
+                return SpecificationTraceRuntime.withoutRecording {
+                    specification.isSatisfiedBy(context) ? result : nil
+                }
+            }
             return SpecificationTraceRuntime.withDecision(String(reflecting: S.self)) {
                 specification.isSatisfiedBy(context) ? result : nil
             }
@@ -69,6 +74,7 @@ public struct AnyDecisionSpec<Context, Result>: DecisionSpec {
     private let _decide: (Context) -> Result?
     #if Tracing
         private let traceName: String
+        private let traceExcluded: Bool
     #endif
 
     /// Creates a type-erased decision specification
@@ -77,6 +83,7 @@ public struct AnyDecisionSpec<Context, Result>: DecisionSpec {
         _decide = decide
         #if Tracing
             traceName = "decision predicate"
+            traceExcluded = false
         #endif
     }
 
@@ -86,17 +93,35 @@ public struct AnyDecisionSpec<Context, Result>: DecisionSpec {
         _decide = spec.decide
         #if Tracing
             traceName = String(reflecting: S.self)
+            traceExcluded = SpecificationTraceRuntime.isExcluded(spec)
         #endif
     }
 
     public func decide(_ context: Context) -> Result? {
         #if Tracing
+            if traceExcluded {
+                return SpecificationTraceRuntime.withoutRecording { _decide(context) }
+            }
             return SpecificationTraceRuntime.withDecision(traceName) { _decide(context) }
         #else
             _decide(context)
         #endif
     }
 }
+
+#if Tracing
+    extension BooleanDecisionAdapter: SpecificationTraceExclusion {
+        var excludesSpecificationTracing: Bool {
+            SpecificationTraceRuntime.isExcluded(specification)
+        }
+    }
+
+    extension AnyDecisionSpec: SpecificationTraceExclusion {
+        var excludesSpecificationTracing: Bool {
+            traceExcluded
+        }
+    }
+#endif
 
 // MARK: - Predicate DecisionSpec
 

@@ -319,16 +319,22 @@ public extension PredicateSpec {
             candidate in
             #if Tracing
                 return SpecificationTraceRuntime.withBoolean("AND") {
-                    let first = SpecificationTraceRuntime.withBoolean(String(reflecting: Self.self)) {
-                        self.isSatisfiedBy(candidate)
-                    }
+                    let first = SpecificationTraceRuntime.evaluateChild(
+                        self,
+                        candidate,
+                        name: String(reflecting: Self.self)
+                    )
                     guard first else {
-                        SpecificationTraceRuntime.skip(String(reflecting: Self.self))
+                        if !SpecificationTraceRuntime.isExcluded(other) {
+                            SpecificationTraceRuntime.skip(String(reflecting: Self.self))
+                        }
                         return false
                     }
-                    return SpecificationTraceRuntime.withBoolean(String(reflecting: Self.self)) {
-                        other.isSatisfiedBy(candidate)
-                    }
+                    return SpecificationTraceRuntime.evaluateChild(
+                        other,
+                        candidate,
+                        name: String(reflecting: Self.self)
+                    )
                 }
             #else
                 self.isSatisfiedBy(candidate) && other.isSatisfiedBy(candidate)
@@ -348,16 +354,22 @@ public extension PredicateSpec {
             candidate in
             #if Tracing
                 return SpecificationTraceRuntime.withBoolean("OR") {
-                    let first = SpecificationTraceRuntime.withBoolean(String(reflecting: Self.self)) {
-                        self.isSatisfiedBy(candidate)
-                    }
+                    let first = SpecificationTraceRuntime.evaluateChild(
+                        self,
+                        candidate,
+                        name: String(reflecting: Self.self)
+                    )
                     if first {
-                        SpecificationTraceRuntime.skip(String(reflecting: Self.self))
+                        if !SpecificationTraceRuntime.isExcluded(other) {
+                            SpecificationTraceRuntime.skip(String(reflecting: Self.self))
+                        }
                         return true
                     }
-                    return SpecificationTraceRuntime.withBoolean(String(reflecting: Self.self)) {
-                        other.isSatisfiedBy(candidate)
-                    }
+                    return SpecificationTraceRuntime.evaluateChild(
+                        other,
+                        candidate,
+                        name: String(reflecting: Self.self)
+                    )
                 }
             #else
                 self.isSatisfiedBy(candidate) || other.isSatisfiedBy(candidate)
@@ -372,9 +384,7 @@ public extension PredicateSpec {
         return PredicateSpec(description: negatedDescription) { candidate in
             #if Tracing
                 return SpecificationTraceRuntime.withBoolean("NOT") {
-                    !SpecificationTraceRuntime.withBoolean(String(reflecting: Self.self)) {
-                        self.isSatisfiedBy(candidate)
-                    }
+                    !SpecificationTraceRuntime.evaluateChild(self, candidate, name: String(reflecting: Self.self))
                 }
             #else
                 !self.isSatisfiedBy(candidate)

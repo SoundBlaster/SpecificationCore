@@ -1,6 +1,10 @@
 #if Tracing
     import Foundation
 
+    protocol SpecificationTraceExclusion {
+        var excludesSpecificationTracing: Bool { get }
+    }
+
     /// The outcome of one specification evaluation or an intentionally skipped branch.
     public enum SpecificationTraceOutcome: Equatable, Sendable {
         /// A Boolean specification returned `true`.
@@ -92,6 +96,7 @@
         }
 
         @TaskLocal private static var context: Context?
+        @TaskLocal private static var recordingSuppressed = false
         private static let defaultRecorderStorage = DefaultRecorderStorage()
 
         /// The process-wide recorder used when an explicit trace scope is absent.
@@ -114,8 +119,65 @@
         }
 
         private static var activeContext: Context? {
+            guard !recordingSuppressed else { return nil }
             if let context { return context }
             return defaultRecorder.map { Context(recorder: $0, parentID: nil) }
+        }
+
+        @usableFromInline
+        static func isExcluded(_ specification: Any) -> Bool {
+            (specification as? any SpecificationTraceExclusion)?.excludesSpecificationTracing == true
+        }
+
+        /// Evaluates an operation without recording it or any nested events.
+        public static func withoutRecording<Result>(_ operation: () -> Result) -> Result {
+            $recordingSuppressed.withValue(true, operation: operation)
+        }
+
+        /// Evaluates an asynchronous operation without recording nested events.
+        public static func withoutRecording<Result>(_ operation: () async throws -> Result) async rethrows -> Result {
+            try await $recordingSuppressed.withValue(true, operation: operation)
+        }
+
+        @usableFromInline
+        static func evaluateChild<S: Specification>(_ specification: S, _ candidate: S.T, name: String) -> Bool {
+            if isExcluded(specification) {
+                return withoutRecording { specification.isSatisfiedBy(candidate) }
+            }
+            return withBoolean(name) { specification.isSatisfiedBy(candidate) }
+        }
+
+        static func evaluateChild<S: AsyncSpecification>(
+            _ specification: S,
+            _ candidate: S.T,
+            name: String
+        ) async throws -> Bool {
+            if isExcluded(specification) {
+                return try await withoutRecording { try await specification.isSatisfiedBy(candidate) }
+            }
+            return try await withBoolean(name) { try await specification.isSatisfiedBy(candidate) }
+        }
+
+        static func decideChild<S: DecisionSpec>(
+            _ specification: S,
+            _ candidate: S.Context,
+            name: String
+        ) -> S.Result? {
+            if isExcluded(specification) {
+                return withoutRecording { specification.decide(candidate) }
+            }
+            return withDecision(name) { specification.decide(candidate) }
+        }
+
+        static func decideChild<S: AsyncDecisionSpec>(
+            _ specification: S,
+            _ candidate: S.Context,
+            name: String
+        ) async throws -> S.Result? {
+            if isExcluded(specification) {
+                return try await withoutRecording { try await specification.decide(candidate) }
+            }
+            return try await withDecision(name) { try await specification.decide(candidate) }
         }
 
         private static func finish(
@@ -254,7 +316,7 @@
             recordingTo recorder: SpecificationTraceRecorder
         ) -> Bool {
             $context.withValue(Context(recorder: recorder, parentID: nil)) {
-                withBoolean(String(reflecting: S.self)) { specification.isSatisfiedBy(candidate) }
+                evaluateChild(specification, candidate, name: String(reflecting: S.self))
             }
         }
 
@@ -266,7 +328,7 @@
             recordingTo recorder: SpecificationTraceRecorder
         ) async throws -> Bool {
             try await $context.withValue(Context(recorder: recorder, parentID: nil)) {
-                try await withBoolean(String(reflecting: S.self)) { try await specification.isSatisfiedBy(candidate) }
+                try await evaluateChild(specification, candidate, name: String(reflecting: S.self))
             }
         }
 
@@ -277,7 +339,7 @@
             recordingTo recorder: SpecificationTraceRecorder
         ) -> S.Result? {
             $context.withValue(Context(recorder: recorder, parentID: nil)) {
-                withDecision(String(reflecting: S.self)) { specification.decide(candidate) }
+                decideChild(specification, candidate, name: String(reflecting: S.self))
             }
         }
 
@@ -289,16 +351,19 @@
             recordingTo recorder: SpecificationTraceRecorder
         ) async throws -> S.Result? {
             try await $context.withValue(Context(recorder: recorder, parentID: nil)) {
-                try await withDecision(String(reflecting: S.self)) { try await specification.decide(candidate) }
+                try await decideChild(specification, candidate, name: String(reflecting: S.self))
             }
         }
     }
 
     /// A named wrapper for a synchronous specification.
-    public struct TracedSpecification<Base: Specification>: Specification {
+    public struct TracedSpecification<Base: Specification>: Specification, SpecificationTraceExclusion {
         public typealias T = Base.T
         private let base: Base
         private let name: String
+        var excludesSpecificationTracing: Bool {
+            SpecificationTraceRuntime.isExcluded(base)
+        }
 
         /// Wraps a specification with a stable name for its trace event.
         public init(_ base: Base, name: String) {
@@ -308,7 +373,10 @@
 
         /// Returns the base result and records it when a recorder is active.
         public func isSatisfiedBy(_ candidate: T) -> Bool {
-            SpecificationTraceRuntime.withBoolean(name) { base.isSatisfiedBy(candidate) }
+            if excludesSpecificationTracing {
+                return SpecificationTraceRuntime.withoutRecording { base.isSatisfiedBy(candidate) }
+            }
+            return SpecificationTraceRuntime.withBoolean(name) { base.isSatisfiedBy(candidate) }
         }
     }
 
@@ -317,13 +385,41 @@
         func traced(_ name: String) -> TracedSpecification<Self> {
             TracedSpecification(self, name: name)
         }
+
+        /// Returns a wrapper whose evaluation is omitted from traces.
+        /// Nested evaluations are also omitted while the wrapper runs.
+        func withoutTracing() -> UntracedSpecification<Self> {
+            UntracedSpecification(self)
+        }
+    }
+
+    /// A synchronous specification whose evaluations are excluded from traces.
+    public struct UntracedSpecification<Base: Specification>: Specification, SpecificationTraceExclusion {
+        public typealias T = Base.T
+        let base: Base
+        var excludesSpecificationTracing: Bool {
+            true
+        }
+
+        /// Wraps a specification without changing its evaluation result.
+        public init(_ base: Base) {
+            self.base = base
+        }
+
+        /// Evaluates the base specification without recording its subtree.
+        public func isSatisfiedBy(_ candidate: T) -> Bool {
+            SpecificationTraceRuntime.withoutRecording { base.isSatisfiedBy(candidate) }
+        }
     }
 
     /// A named wrapper for an asynchronous specification.
-    public struct TracedAsyncSpecification<Base: AsyncSpecification>: AsyncSpecification {
+    public struct TracedAsyncSpecification<Base: AsyncSpecification>: AsyncSpecification, SpecificationTraceExclusion {
         public typealias T = Base.T
         private let base: Base
         private let name: String
+        var excludesSpecificationTracing: Bool {
+            SpecificationTraceRuntime.isExcluded(base)
+        }
 
         /// Wraps an asynchronous specification with a stable trace name.
         public init(_ base: Base, name: String) {
@@ -333,7 +429,10 @@
 
         /// Returns the base result and propagates errors after recording them.
         public func isSatisfiedBy(_ candidate: T) async throws -> Bool {
-            try await SpecificationTraceRuntime.withBoolean(name) { try await base.isSatisfiedBy(candidate) }
+            if excludesSpecificationTracing {
+                return try await SpecificationTraceRuntime.withoutRecording { try await base.isSatisfiedBy(candidate) }
+            }
+            return try await SpecificationTraceRuntime.withBoolean(name) { try await base.isSatisfiedBy(candidate) }
         }
     }
 
@@ -342,14 +441,43 @@
         func traced(_ name: String) -> TracedAsyncSpecification<Self> {
             TracedAsyncSpecification(self, name: name)
         }
+
+        /// Returns a wrapper whose asynchronous evaluation is omitted from traces.
+        func withoutTracing() -> UntracedAsyncSpecification<Self> {
+            UntracedAsyncSpecification(self)
+        }
+    }
+
+    /// An asynchronous specification whose evaluations are excluded from traces.
+    public struct UntracedAsyncSpecification<Base: AsyncSpecification>: AsyncSpecification,
+        SpecificationTraceExclusion
+    {
+        public typealias T = Base.T
+        let base: Base
+        var excludesSpecificationTracing: Bool {
+            true
+        }
+
+        /// Wraps an asynchronous specification without changing its result or errors.
+        public init(_ base: Base) {
+            self.base = base
+        }
+
+        /// Evaluates the base specification without recording its subtree.
+        public func isSatisfiedBy(_ candidate: T) async throws -> Bool {
+            try await SpecificationTraceRuntime.withoutRecording { try await base.isSatisfiedBy(candidate) }
+        }
     }
 
     /// A named wrapper for a synchronous decision specification.
-    public struct TracedDecisionSpec<Base: DecisionSpec>: DecisionSpec {
+    public struct TracedDecisionSpec<Base: DecisionSpec>: DecisionSpec, SpecificationTraceExclusion {
         public typealias Context = Base.Context
         public typealias Result = Base.Result
         private let base: Base
         private let name: String
+        var excludesSpecificationTracing: Bool {
+            SpecificationTraceRuntime.isExcluded(base)
+        }
 
         /// Wraps a decision specification with a stable trace name.
         public init(_ base: Base, name: String) {
@@ -359,7 +487,10 @@
 
         /// Returns the base decision and records whether it selected a result.
         public func decide(_ context: Context) -> Result? {
-            SpecificationTraceRuntime.withDecision(name) { base.decide(context) }
+            if excludesSpecificationTracing {
+                return SpecificationTraceRuntime.withoutRecording { base.decide(context) }
+            }
+            return SpecificationTraceRuntime.withDecision(name) { base.decide(context) }
         }
     }
 
@@ -368,14 +499,42 @@
         func traced(_ name: String) -> TracedDecisionSpec<Self> {
             TracedDecisionSpec(self, name: name)
         }
+
+        /// Returns a wrapper whose decision is omitted from traces.
+        func withoutTracing() -> UntracedDecisionSpec<Self> {
+            UntracedDecisionSpec(self)
+        }
+    }
+
+    /// A synchronous decision whose evaluations are excluded from traces.
+    public struct UntracedDecisionSpec<Base: DecisionSpec>: DecisionSpec, SpecificationTraceExclusion {
+        public typealias Context = Base.Context
+        public typealias Result = Base.Result
+        let base: Base
+        var excludesSpecificationTracing: Bool {
+            true
+        }
+
+        /// Wraps a decision without changing its result.
+        public init(_ base: Base) {
+            self.base = base
+        }
+
+        /// Evaluates the base decision without recording its subtree.
+        public func decide(_ context: Context) -> Result? {
+            SpecificationTraceRuntime.withoutRecording { base.decide(context) }
+        }
     }
 
     /// A named wrapper for an asynchronous decision specification.
-    public struct TracedAsyncDecisionSpec<Base: AsyncDecisionSpec>: AsyncDecisionSpec {
+    public struct TracedAsyncDecisionSpec<Base: AsyncDecisionSpec>: AsyncDecisionSpec, SpecificationTraceExclusion {
         public typealias Context = Base.Context
         public typealias Result = Base.Result
         private let base: Base
         private let name: String
+        var excludesSpecificationTracing: Bool {
+            SpecificationTraceRuntime.isExcluded(base)
+        }
 
         /// Wraps an asynchronous decision specification with a stable trace name.
         public init(_ base: Base, name: String) {
@@ -385,7 +544,10 @@
 
         /// Returns the base decision and propagates errors after recording them.
         public func decide(_ context: Context) async throws -> Result? {
-            try await SpecificationTraceRuntime.withDecision(name) { try await base.decide(context) }
+            if excludesSpecificationTracing {
+                return try await SpecificationTraceRuntime.withoutRecording { try await base.decide(context) }
+            }
+            return try await SpecificationTraceRuntime.withDecision(name) { try await base.decide(context) }
         }
     }
 
@@ -393,6 +555,31 @@
         /// Returns a named tracing wrapper around this asynchronous decision specification.
         func traced(_ name: String) -> TracedAsyncDecisionSpec<Self> {
             TracedAsyncDecisionSpec(self, name: name)
+        }
+
+        /// Returns a wrapper whose asynchronous decision is omitted from traces.
+        func withoutTracing() -> UntracedAsyncDecisionSpec<Self> {
+            UntracedAsyncDecisionSpec(self)
+        }
+    }
+
+    /// An asynchronous decision whose evaluations are excluded from traces.
+    public struct UntracedAsyncDecisionSpec<Base: AsyncDecisionSpec>: AsyncDecisionSpec, SpecificationTraceExclusion {
+        public typealias Context = Base.Context
+        public typealias Result = Base.Result
+        let base: Base
+        var excludesSpecificationTracing: Bool {
+            true
+        }
+
+        /// Wraps an asynchronous decision without changing its result or errors.
+        public init(_ base: Base) {
+            self.base = base
+        }
+
+        /// Evaluates the base decision without recording its subtree.
+        public func decide(_ context: Context) async throws -> Result? {
+            try await SpecificationTraceRuntime.withoutRecording { try await base.decide(context) }
         }
     }
 #endif

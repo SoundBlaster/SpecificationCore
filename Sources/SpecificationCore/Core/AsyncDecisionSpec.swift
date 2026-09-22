@@ -17,6 +17,7 @@ public struct AnyAsyncDecisionSpec<Context, Result>: AsyncDecisionSpec {
     private let _decide: (Context) async throws -> Result?
     #if Tracing
         private let traceName: String
+        private let traceExcluded: Bool
     #endif
 
     /// Creates a type-erased decision from an asynchronous closure.
@@ -24,6 +25,7 @@ public struct AnyAsyncDecisionSpec<Context, Result>: AsyncDecisionSpec {
         _decide = decide
         #if Tracing
             traceName = "async decision predicate"
+            traceExcluded = false
         #endif
     }
 
@@ -34,6 +36,7 @@ public struct AnyAsyncDecisionSpec<Context, Result>: AsyncDecisionSpec {
         _decide = specification.decide
         #if Tracing
             traceName = String(reflecting: S.self)
+            traceExcluded = SpecificationTraceRuntime.isExcluded(specification)
         #endif
     }
 
@@ -44,11 +47,20 @@ public struct AnyAsyncDecisionSpec<Context, Result>: AsyncDecisionSpec {
         _decide = { context in specification.decide(context) }
         #if Tracing
             traceName = String(reflecting: S.self)
+            traceExcluded = SpecificationTraceRuntime.isExcluded(specification)
         #endif
     }
 
     public func decide(_ context: Context) async throws -> Result? {
         #if Tracing
+            if traceExcluded {
+                return try await SpecificationTraceRuntime.withoutRecording {
+                    try Task.checkCancellation()
+                    let result = try await _decide(context)
+                    try Task.checkCancellation()
+                    return result
+                }
+            }
             return try await SpecificationTraceRuntime.withDecision(traceName) {
                 try Task.checkCancellation()
                 let result = try await _decide(context)
@@ -79,6 +91,14 @@ public struct AsyncBooleanDecisionAdapter<S: AsyncSpecification, Result>: AsyncD
 
     public func decide(_ context: Context) async throws -> Result? {
         #if Tracing
+            if SpecificationTraceRuntime.isExcluded(specification) {
+                return try await SpecificationTraceRuntime.withoutRecording {
+                    try Task.checkCancellation()
+                    let isSatisfied = try await specification.isSatisfiedBy(context)
+                    try Task.checkCancellation()
+                    return isSatisfied ? result : nil
+                }
+            }
             return try await SpecificationTraceRuntime.withDecision(String(reflecting: S.self)) {
                 try Task.checkCancellation()
                 let isSatisfied = try await specification.isSatisfiedBy(context)
@@ -93,3 +113,17 @@ public struct AsyncBooleanDecisionAdapter<S: AsyncSpecification, Result>: AsyncD
         #endif
     }
 }
+
+#if Tracing
+    extension AnyAsyncDecisionSpec: SpecificationTraceExclusion {
+        var excludesSpecificationTracing: Bool {
+            traceExcluded
+        }
+    }
+
+    extension AsyncBooleanDecisionAdapter: SpecificationTraceExclusion {
+        var excludesSpecificationTracing: Bool {
+            SpecificationTraceRuntime.isExcluded(specification)
+        }
+    }
+#endif

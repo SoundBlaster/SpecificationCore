@@ -227,16 +227,18 @@ public struct AndSpecification<Left: Specification, Right: Specification>: Speci
     public func isSatisfiedBy(_ candidate: T) -> Bool {
         #if Tracing
             return SpecificationTraceRuntime.withBoolean("AND") {
-                let first = SpecificationTraceRuntime.withBoolean(String(reflecting: Left.self)) {
-                    left.isSatisfiedBy(candidate)
-                }
+                let first = SpecificationTraceRuntime.evaluateChild(
+                    left,
+                    candidate,
+                    name: String(reflecting: Left.self)
+                )
                 guard first else {
-                    SpecificationTraceRuntime.skip(String(reflecting: Right.self))
+                    if !SpecificationTraceRuntime.isExcluded(right) {
+                        SpecificationTraceRuntime.skip(String(reflecting: Right.self))
+                    }
                     return false
                 }
-                return SpecificationTraceRuntime.withBoolean(String(reflecting: Right.self)) {
-                    right.isSatisfiedBy(candidate)
-                }
+                return SpecificationTraceRuntime.evaluateChild(right, candidate, name: String(reflecting: Right.self))
             }
         #else
             left.isSatisfiedBy(candidate) && right.isSatisfiedBy(candidate)
@@ -285,16 +287,18 @@ public struct OrSpecification<Left: Specification, Right: Specification>: Specif
     public func isSatisfiedBy(_ candidate: T) -> Bool {
         #if Tracing
             return SpecificationTraceRuntime.withBoolean("OR") {
-                let first = SpecificationTraceRuntime.withBoolean(String(reflecting: Left.self)) {
-                    left.isSatisfiedBy(candidate)
-                }
+                let first = SpecificationTraceRuntime.evaluateChild(
+                    left,
+                    candidate,
+                    name: String(reflecting: Left.self)
+                )
                 if first {
-                    SpecificationTraceRuntime.skip(String(reflecting: Right.self))
+                    if !SpecificationTraceRuntime.isExcluded(right) {
+                        SpecificationTraceRuntime.skip(String(reflecting: Right.self))
+                    }
                     return true
                 }
-                return SpecificationTraceRuntime.withBoolean(String(reflecting: Right.self)) {
-                    right.isSatisfiedBy(candidate)
-                }
+                return SpecificationTraceRuntime.evaluateChild(right, candidate, name: String(reflecting: Right.self))
             }
         #else
             left.isSatisfiedBy(candidate) || right.isSatisfiedBy(candidate)
@@ -337,9 +341,7 @@ public struct NotSpecification<Wrapped: Specification>: Specification {
     public func isSatisfiedBy(_ candidate: T) -> Bool {
         #if Tracing
             return SpecificationTraceRuntime.withBoolean("NOT") {
-                !SpecificationTraceRuntime.withBoolean(String(reflecting: Wrapped.self)) {
-                    wrapped.isSatisfiedBy(candidate)
-                }
+                !SpecificationTraceRuntime.evaluateChild(wrapped, candidate, name: String(reflecting: Wrapped.self))
             }
         #else
             !wrapped.isSatisfiedBy(candidate)

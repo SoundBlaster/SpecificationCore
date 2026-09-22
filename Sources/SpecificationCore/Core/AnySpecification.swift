@@ -89,9 +89,7 @@ public struct AnySpecification<T>: Specification {
             #endif
         #if Tracing
             case let .specification(spec, name):
-                return SpecificationTraceRuntime.withBoolean(name) {
-                    spec.isSatisfiedBy(candidate)
-                }
+                return SpecificationTraceRuntime.evaluateChild(spec, candidate, name: name)
         #else
             case let .specification(spec):
                 return spec.isSatisfiedBy(candidate)
@@ -99,6 +97,17 @@ public struct AnySpecification<T>: Specification {
         }
     }
 }
+
+#if Tracing
+    extension AnySpecification: SpecificationTraceExclusion {
+        var excludesSpecificationTracing: Bool {
+            if case let .specification(spec, _) = storage {
+                return SpecificationTraceRuntime.isExcluded(spec)
+            }
+            return false
+        }
+    }
+#endif
 
 // MARK: - Convenience Extensions
 
@@ -147,11 +156,13 @@ public extension Collection where Element: Specification {
             #if Tracing
                 var iterator = makeIterator()
                 while let specification = iterator.next() {
-                    guard SpecificationTraceRuntime.withBoolean(String(reflecting: Element.self), {
-                        specification.isSatisfiedBy(candidate)
-                    }) else {
-                        while iterator.next() != nil {
-                            SpecificationTraceRuntime.skip(String(reflecting: Element.self))
+                    guard SpecificationTraceRuntime.evaluateChild(
+                        specification, candidate, name: String(reflecting: Element.self)
+                    ) else {
+                        while let remaining = iterator.next() {
+                            if !SpecificationTraceRuntime.isExcluded(remaining) {
+                                SpecificationTraceRuntime.skip(String(reflecting: Element.self))
+                            }
                         }
                         return false
                     }
@@ -181,11 +192,13 @@ public extension Collection where Element: Specification {
             #if Tracing
                 var iterator = makeIterator()
                 while let specification = iterator.next() {
-                    if SpecificationTraceRuntime.withBoolean(String(reflecting: Element.self), {
-                        specification.isSatisfiedBy(candidate)
-                    }) {
-                        while iterator.next() != nil {
-                            SpecificationTraceRuntime.skip(String(reflecting: Element.self))
+                    if SpecificationTraceRuntime.evaluateChild(
+                        specification, candidate, name: String(reflecting: Element.self)
+                    ) {
+                        while let remaining = iterator.next() {
+                            if !SpecificationTraceRuntime.isExcluded(remaining) {
+                                SpecificationTraceRuntime.skip(String(reflecting: Element.self))
+                            }
                         }
                         return true
                     }

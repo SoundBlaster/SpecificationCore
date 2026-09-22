@@ -101,12 +101,14 @@ public struct FirstMatchSpec<Context, Result>: DecisionSpec {
         #if Tracing
             return SpecificationTraceRuntime.withDecision("FirstMatchSpec") {
                 for (index, pair) in pairs.enumerated() {
-                    let matched = SpecificationTraceRuntime.withBoolean("pair[\(index)]") {
-                        pair.specification.isSatisfiedBy(context)
-                    }
+                    let matched = SpecificationTraceRuntime.evaluateChild(
+                        pair.specification, context, name: "pair[\(index)]"
+                    )
                     if matched {
                         for skippedIndex in pairs.indices where skippedIndex > index {
-                            SpecificationTraceRuntime.skip("pair[\(skippedIndex)]")
+                            if !SpecificationTraceRuntime.isExcluded(pairs[skippedIndex].specification) {
+                                SpecificationTraceRuntime.skip("pair[\(skippedIndex)]")
+                            }
                         }
                         return pair.result
                     }
@@ -131,12 +133,14 @@ public struct FirstMatchSpec<Context, Result>: DecisionSpec {
         #if Tracing
             return SpecificationTraceRuntime.withDecision("FirstMatchSpec.withMetadata") {
                 for (index, pair) in pairs.enumerated() {
-                    let matched = SpecificationTraceRuntime.withBoolean("pair[\(index)]") {
-                        pair.specification.isSatisfiedBy(context)
-                    }
+                    let matched = SpecificationTraceRuntime.evaluateChild(
+                        pair.specification, context, name: "pair[\(index)]"
+                    )
                     if matched {
                         for skippedIndex in pairs.indices where skippedIndex > index {
-                            SpecificationTraceRuntime.skip("pair[\(skippedIndex)]")
+                            if !SpecificationTraceRuntime.isExcluded(pairs[skippedIndex].specification) {
+                                SpecificationTraceRuntime.skip("pair[\(skippedIndex)]")
+                            }
                         }
                         return (pair.result, index)
                     }
