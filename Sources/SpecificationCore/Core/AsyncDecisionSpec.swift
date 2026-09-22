@@ -15,10 +15,16 @@ public protocol AsyncDecisionSpec {
 /// A type-erased asynchronous decision specification.
 public struct AnyAsyncDecisionSpec<Context, Result>: AsyncDecisionSpec {
     private let _decide: (Context) async throws -> Result?
+    #if Tracing
+        private let traceName: String
+    #endif
 
     /// Creates a type-erased decision from an asynchronous closure.
     public init(_ decide: @escaping (Context) async throws -> Result?) {
         _decide = decide
+        #if Tracing
+            traceName = "async decision predicate"
+        #endif
     }
 
     /// Creates a type-erased decision wrapping another asynchronous decision specification.
@@ -26,6 +32,9 @@ public struct AnyAsyncDecisionSpec<Context, Result>: AsyncDecisionSpec {
         where S.Context == Context, S.Result == Result
     {
         _decide = specification.decide
+        #if Tracing
+            traceName = String(reflecting: S.self)
+        #endif
     }
 
     /// Bridges a synchronous decision specification into an asynchronous decision.
@@ -33,13 +42,25 @@ public struct AnyAsyncDecisionSpec<Context, Result>: AsyncDecisionSpec {
         where S.Context == Context, S.Result == Result
     {
         _decide = { context in specification.decide(context) }
+        #if Tracing
+            traceName = String(reflecting: S.self)
+        #endif
     }
 
     public func decide(_ context: Context) async throws -> Result? {
-        try Task.checkCancellation()
-        let result = try await _decide(context)
-        try Task.checkCancellation()
-        return result
+        #if Tracing
+            return try await SpecificationTraceRuntime.withDecision(traceName) {
+                try Task.checkCancellation()
+                let result = try await _decide(context)
+                try Task.checkCancellation()
+                return result
+            }
+        #else
+            try Task.checkCancellation()
+            let result = try await _decide(context)
+            try Task.checkCancellation()
+            return result
+        #endif
     }
 }
 
@@ -57,9 +78,18 @@ public struct AsyncBooleanDecisionAdapter<S: AsyncSpecification, Result>: AsyncD
     }
 
     public func decide(_ context: Context) async throws -> Result? {
-        try Task.checkCancellation()
-        let isSatisfied = try await specification.isSatisfiedBy(context)
-        try Task.checkCancellation()
-        return isSatisfied ? result : nil
+        #if Tracing
+            return try await SpecificationTraceRuntime.withDecision(String(reflecting: S.self)) {
+                try Task.checkCancellation()
+                let isSatisfied = try await specification.isSatisfiedBy(context)
+                try Task.checkCancellation()
+                return isSatisfied ? result : nil
+            }
+        #else
+            try Task.checkCancellation()
+            let isSatisfied = try await specification.isSatisfiedBy(context)
+            try Task.checkCancellation()
+            return isSatisfied ? result : nil
+        #endif
     }
 }

@@ -24,7 +24,11 @@ public struct AnySpecification<T>: Specification {
     @usableFromInline
     enum Storage {
         case predicate((T) -> Bool)
-        case specification(any Specification<T>)
+        #if Tracing
+            case specification(any Specification<T>, String)
+        #else
+            case specification(any Specification<T>)
+        #endif
         case constantTrue
         case constantFalse
     }
@@ -45,7 +49,11 @@ public struct AnySpecification<T>: Specification {
             storage = .constantFalse
         } else {
             // Store the specification directly for better performance
-            storage = .specification(specification)
+            #if Tracing
+                storage = .specification(specification, String(reflecting: S.self))
+            #else
+                storage = .specification(specification)
+            #endif
         }
     }
 
@@ -62,13 +70,32 @@ public struct AnySpecification<T>: Specification {
     public func isSatisfiedBy(_ candidate: T) -> Bool {
         switch storage {
         case .constantTrue:
-            return true
+            #if Tracing
+                return SpecificationTraceRuntime.withBoolean("AlwaysTrueSpec") { true }
+            #else
+                return true
+            #endif
         case .constantFalse:
-            return false
+            #if Tracing
+                return SpecificationTraceRuntime.withBoolean("AlwaysFalseSpec") { false }
+            #else
+                return false
+            #endif
         case let .predicate(predicate):
-            return predicate(candidate)
-        case let .specification(spec):
-            return spec.isSatisfiedBy(candidate)
+            #if Tracing
+                return SpecificationTraceRuntime.withBoolean("predicate") { predicate(candidate) }
+            #else
+                return predicate(candidate)
+            #endif
+        #if Tracing
+            case let .specification(spec, name):
+                return SpecificationTraceRuntime.withBoolean(name) {
+                    spec.isSatisfiedBy(candidate)
+                }
+        #else
+            case let .specification(spec):
+                return spec.isSatisfiedBy(candidate)
+        #endif
         }
     }
 }
@@ -117,9 +144,18 @@ public extension Collection where Element: Specification {
         }
 
         return AnySpecification { candidate in
-            self.allSatisfy { spec in
-                spec.isSatisfiedBy(candidate)
-            }
+            #if Tracing
+                for specification in self {
+                    guard SpecificationTraceRuntime.withBoolean(String(reflecting: Element.self), {
+                        specification.isSatisfiedBy(candidate)
+                    }) else { return false }
+                }
+                return true
+            #else
+                self.allSatisfy { spec in
+                    spec.isSatisfiedBy(candidate)
+                }
+            #endif
         }
     }
 
@@ -136,9 +172,18 @@ public extension Collection where Element: Specification {
         }
 
         return AnySpecification { candidate in
-            self.contains { spec in
-                spec.isSatisfiedBy(candidate)
-            }
+            #if Tracing
+                for specification in self {
+                    if SpecificationTraceRuntime.withBoolean(String(reflecting: Element.self), {
+                        specification.isSatisfiedBy(candidate)
+                    }) { return true }
+                }
+                return false
+            #else
+                self.contains { spec in
+                    spec.isSatisfiedBy(candidate)
+                }
+            #endif
         }
     }
 }

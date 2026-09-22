@@ -49,10 +49,11 @@ This package is extracted from [SpecificationKit](https://github.com/SoundBlaste
 ### Macros
 - **@specs** - Composite specification synthesis
 - **@AutoContext** - Automatic context provider injection
+- **Tracing trait** - Opt-in evaluation spans, custom specification macros, and named wrappers
 
 ## Requirements
 
-- Swift 5.10+
+- Swift 6.1+ for the current source; the 1.1.0 release supports Swift 5.10+
 - iOS 13.0+ / macOS 10.15+ / tvOS 13.0+ / watchOS 6.0+
 - Linux (Ubuntu 20.04+)
 
@@ -64,7 +65,7 @@ Add SpecificationCore to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/SoundBlaster/SpecificationCore.git", from: "1.0.1")
+    .package(url: "https://github.com/SoundBlaster/SpecificationCore.git", from: "1.1.0")
 ]
 ```
 
@@ -169,6 +170,20 @@ struct PaymentEligibility {
 ```
 
 ## Architecture
+
+### Optional tracing
+
+The `Tracing` SwiftPM trait records the path through synchronous and asynchronous rules. It is disabled by default. Enable it in the package dependency declaration when using a release that contains the trait:
+
+```swift
+.package(
+    url: "https://github.com/SoundBlaster/SpecificationCore.git",
+    from: "<release-containing-Tracing>",
+    traits: ["Tracing"]
+)
+```
+
+`@TracedSpecification("stable.rule.name")` instruments a custom specification's evaluation method. `.traced("stable.rule.name")` wraps a specification or decision built at runtime. Use `SpecificationTraceRuntime.evaluate` or `decide` with a `SpecificationTraceRecorder` to collect events. See [Specification tracing](DOCS/Tracing.md) for async calls, outcomes, and limitations.
 
 SpecificationCore follows a layered architecture:
 

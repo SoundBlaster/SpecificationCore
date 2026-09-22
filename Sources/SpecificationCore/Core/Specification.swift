@@ -225,7 +225,22 @@ public struct AndSpecification<Left: Specification, Right: Specification>: Speci
      * - Returns: `true` if both specifications are satisfied, `false` otherwise.
      */
     public func isSatisfiedBy(_ candidate: T) -> Bool {
-        left.isSatisfiedBy(candidate) && right.isSatisfiedBy(candidate)
+        #if Tracing
+            return SpecificationTraceRuntime.withBoolean("AND") {
+                let first = SpecificationTraceRuntime.withBoolean(String(reflecting: Left.self)) {
+                    left.isSatisfiedBy(candidate)
+                }
+                guard first else {
+                    SpecificationTraceRuntime.skip(String(reflecting: Right.self))
+                    return false
+                }
+                return SpecificationTraceRuntime.withBoolean(String(reflecting: Right.self)) {
+                    right.isSatisfiedBy(candidate)
+                }
+            }
+        #else
+            left.isSatisfiedBy(candidate) && right.isSatisfiedBy(candidate)
+        #endif
     }
 }
 
@@ -268,7 +283,22 @@ public struct OrSpecification<Left: Specification, Right: Specification>: Specif
      * - Returns: `true` if either specification is satisfied, `false` otherwise.
      */
     public func isSatisfiedBy(_ candidate: T) -> Bool {
-        left.isSatisfiedBy(candidate) || right.isSatisfiedBy(candidate)
+        #if Tracing
+            return SpecificationTraceRuntime.withBoolean("OR") {
+                let first = SpecificationTraceRuntime.withBoolean(String(reflecting: Left.self)) {
+                    left.isSatisfiedBy(candidate)
+                }
+                if first {
+                    SpecificationTraceRuntime.skip(String(reflecting: Right.self))
+                    return true
+                }
+                return SpecificationTraceRuntime.withBoolean(String(reflecting: Right.self)) {
+                    right.isSatisfiedBy(candidate)
+                }
+            }
+        #else
+            left.isSatisfiedBy(candidate) || right.isSatisfiedBy(candidate)
+        #endif
     }
 }
 
@@ -305,6 +335,14 @@ public struct NotSpecification<Wrapped: Specification>: Specification {
      * - Returns: `true` if the wrapped specification is NOT satisfied, `false` otherwise.
      */
     public func isSatisfiedBy(_ candidate: T) -> Bool {
-        !wrapped.isSatisfiedBy(candidate)
+        #if Tracing
+            return SpecificationTraceRuntime.withBoolean("NOT") {
+                !SpecificationTraceRuntime.withBoolean(String(reflecting: Wrapped.self)) {
+                    wrapped.isSatisfiedBy(candidate)
+                }
+            }
+        #else
+            !wrapped.isSatisfiedBy(candidate)
+        #endif
     }
 }

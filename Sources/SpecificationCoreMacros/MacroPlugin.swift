@@ -14,6 +14,8 @@ import SwiftSyntaxMacros
 struct SpecificationCorePlugin: CompilerPlugin {
     let providingMacros: [Macro.Type] = [
         SpecsMacro.self,
-        AutoContextMacro.self
+        AutoContextMacro.self,
+        TracedSpecificationMacro.self,
+        TraceEvaluationMacro.self
     ]
 }

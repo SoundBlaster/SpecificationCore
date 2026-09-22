@@ -1,4 +1,4 @@
-// swift-tools-version: 5.10
+// swift-tools-version: 6.1
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import CompilerPluginSupport
@@ -19,9 +19,12 @@ let package = Package(
             targets: ["SpecificationCore"]
         )
     ],
+    traits: [
+        .trait(name: "Tracing", description: "Emit opt-in specification evaluation traces")
+    ],
     dependencies: [
         // Depend on the latest Swift Syntax package for macro support.
-        .package(url: "https://github.com/swiftlang/swift-syntax", from: "510.0.0"),
+        .package(url: "https://github.com/swiftlang/swift-syntax", from: "601.0.0"),
         // Add swift-macro-testing for a simplified macro testing experience.
         .package(url: "https://github.com/pointfreeco/swift-macro-testing", from: "0.4.0"),
         // Add Swift-DocC Plugin for documentation generation
@@ -62,5 +65,6 @@ let package = Package(
                 .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax")
             ]
         )
-    ]
+    ],
+    swiftLanguageModes: [.v5]
 )

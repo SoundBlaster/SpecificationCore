@@ -52,7 +52,13 @@ public struct BooleanDecisionAdapter<S: Specification, R>: DecisionSpec {
     }
 
     public func decide(_ context: Context) -> Result? {
-        specification.isSatisfiedBy(context) ? result : nil
+        #if Tracing
+            return SpecificationTraceRuntime.withDecision(String(reflecting: S.self)) {
+                specification.isSatisfiedBy(context) ? result : nil
+            }
+        #else
+            specification.isSatisfiedBy(context) ? result : nil
+        #endif
     }
 }
 
@@ -61,21 +67,34 @@ public struct BooleanDecisionAdapter<S: Specification, R>: DecisionSpec {
 /// A type-erased DecisionSpec that can wrap any concrete DecisionSpec implementation
 public struct AnyDecisionSpec<Context, Result>: DecisionSpec {
     private let _decide: (Context) -> Result?
+    #if Tracing
+        private let traceName: String
+    #endif
 
     /// Creates a type-erased decision specification
     /// - Parameter decide: The decision function
     public init(_ decide: @escaping (Context) -> Result?) {
         _decide = decide
+        #if Tracing
+            traceName = "decision predicate"
+        #endif
     }
 
     /// Creates a type-erased decision specification wrapping a concrete implementation
     /// - Parameter spec: The concrete decision specification to wrap
     public init<S: DecisionSpec>(_ spec: S) where S.Context == Context, S.Result == Result {
         _decide = spec.decide
+        #if Tracing
+            traceName = String(reflecting: S.self)
+        #endif
     }
 
     public func decide(_ context: Context) -> Result? {
-        _decide(context)
+        #if Tracing
+            return SpecificationTraceRuntime.withDecision(traceName) { _decide(context) }
+        #else
+            _decide(context)
+        #endif
     }
 }
 
@@ -96,6 +115,12 @@ public struct PredicateDecisionSpec<Context, Result>: DecisionSpec {
     }
 
     public func decide(_ context: Context) -> Result? {
-        predicate(context) ? result : nil
+        #if Tracing
+            return SpecificationTraceRuntime.withDecision("PredicateDecisionSpec") {
+                predicate(context) ? result : nil
+            }
+        #else
+            predicate(context) ? result : nil
+        #endif
     }
 }
