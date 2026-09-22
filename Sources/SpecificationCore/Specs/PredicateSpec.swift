@@ -26,8 +26,16 @@ public struct PredicateSpec<T>: Specification {
         self.predicate = predicate
     }
 
+    /// Evaluates the predicate. With tracing enabled and a recorder active,
+    /// records a span named by `description` or the reflected type name.
     public func isSatisfiedBy(_ candidate: T) -> Bool {
-        predicate(candidate)
+        #if Tracing
+            return SpecificationTraceRuntime.withBoolean(description ?? String(reflecting: Self.self)) {
+                predicate(candidate)
+            }
+        #else
+            predicate(candidate)
+        #endif
     }
 }
 

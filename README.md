@@ -183,7 +183,7 @@ The `Tracing` SwiftPM trait records the path through synchronous and asynchronou
 )
 ```
 
-`@TracedSpecification("stable.rule.name")` instruments a custom specification's evaluation method. `.traced("stable.rule.name")` wraps a specification or decision built at runtime. Use `SpecificationTraceRuntime.evaluate` or `decide` with a `SpecificationTraceRecorder` to collect events. See the [DocC tracing guide](Sources/SpecificationCore/Documentation.docc/Tracing.md) for async calls, outcomes, and limitations.
+Configure `SpecificationTraceRuntime.defaultRecorder = SpecificationTraceRecorder()` once at application startup to capture instrumented evaluations without changing their call sites. `@TracedSpecification("stable.rule.name")` instruments a custom specification's evaluation method; `.traced("stable.rule.name")` wraps a value built at runtime. See the [DocC tracing guide](Sources/SpecificationCore/Documentation.docc/Tracing.md) for explicit scopes, async calls, outcomes, and coverage limits.
 
 SpecificationCore follows a layered architecture:
 

@@ -78,15 +78,45 @@
         }
     }
 
-    /// Runs evaluations in a trace scope and records nested specification events.
-    /// Calls without a scope do not record events.
+    /// Records instrumented specifications in an explicit scope or with a
+    /// process-wide default recorder.
     public enum SpecificationTraceRuntime {
         private struct Context: Sendable {
             let recorder: SpecificationTraceRecorder
             let parentID: Int?
         }
 
+        private final class DefaultRecorderStorage: @unchecked Sendable {
+            let lock = NSLock()
+            var recorder: SpecificationTraceRecorder?
+        }
+
         @TaskLocal private static var context: Context?
+        private static let defaultRecorderStorage = DefaultRecorderStorage()
+
+        /// The process-wide recorder used when an explicit trace scope is absent.
+        ///
+        /// Set this once at application startup to trace instrumented evaluations
+        /// without changing their call sites. Set it to `nil` to stop recording.
+        /// Explicit `evaluate` and `decide` calls take precedence for their task.
+        /// The runtime holds the recorder strongly while it is configured.
+        public static var defaultRecorder: SpecificationTraceRecorder? {
+            get {
+                defaultRecorderStorage.lock.lock()
+                defer { defaultRecorderStorage.lock.unlock() }
+                return defaultRecorderStorage.recorder
+            }
+            set {
+                defaultRecorderStorage.lock.lock()
+                defer { defaultRecorderStorage.lock.unlock() }
+                defaultRecorderStorage.recorder = newValue
+            }
+        }
+
+        private static var activeContext: Context? {
+            if let context { return context }
+            return defaultRecorder.map { Context(recorder: $0, parentID: nil) }
+        }
 
         private static func finish(
             _ id: Int,
@@ -104,10 +134,10 @@
             ))
         }
 
-        /// Records a synchronous Boolean operation as a child of the current scope.
-        /// Outside a scope, runs the operation without recording.
+        /// Records a synchronous Boolean operation in the active trace context.
+        /// Without an explicit or default recorder, runs without recording.
         public static func withBoolean(_ name: String, _ operation: () -> Bool) -> Bool {
-            guard let context else { return operation() }
+            guard let context = activeContext else { return operation() }
             let id = context.recorder.reserveID()
             let start = DispatchTime.now().uptimeNanoseconds
             let result = $context.withValue(Context(recorder: context.recorder, parentID: id), operation: operation)
@@ -115,9 +145,9 @@
             return result
         }
 
-        /// Records an asynchronous Boolean operation as a child of the current scope.
+        /// Records an asynchronous Boolean operation in the active trace context.
         public static func withBoolean(_ name: String, _ operation: () async -> Bool) async -> Bool {
-            guard let context else { return await operation() }
+            guard let context = activeContext else { return await operation() }
             let id = context.recorder.reserveID()
             let start = DispatchTime.now().uptimeNanoseconds
             let result = await $context.withValue(
@@ -131,7 +161,7 @@
         /// Records an asynchronous throwing Boolean operation and propagates its error.
         /// A thrown `CancellationError` receives the `cancelled` outcome.
         public static func withBoolean(_ name: String, _ operation: () async throws -> Bool) async throws -> Bool {
-            guard let context else { return try await operation() }
+            guard let context = activeContext else { return try await operation() }
             let id = context.recorder.reserveID()
             let start = DispatchTime.now().uptimeNanoseconds
             do {
@@ -155,7 +185,7 @@
 
         /// Records a synchronous optional decision as selected or unmatched.
         public static func withDecision<Result>(_ name: String, _ operation: () -> Result?) -> Result? {
-            guard let context else { return operation() }
+            guard let context = activeContext else { return operation() }
             let id = context.recorder.reserveID()
             let start = DispatchTime.now().uptimeNanoseconds
             let result = $context.withValue(Context(recorder: context.recorder, parentID: id), operation: operation)
@@ -165,7 +195,7 @@
 
         /// Records an asynchronous optional decision as selected or unmatched.
         public static func withDecision<Result>(_ name: String, _ operation: () async -> Result?) async -> Result? {
-            guard let context else { return await operation() }
+            guard let context = activeContext else { return await operation() }
             let id = context.recorder.reserveID()
             let start = DispatchTime.now().uptimeNanoseconds
             let result = await $context.withValue(
@@ -181,7 +211,7 @@
             _ name: String,
             _ operation: () async throws -> Result?
         ) async throws -> Result? {
-            guard let context else { return try await operation() }
+            guard let context = activeContext else { return try await operation() }
             let id = context.recorder.reserveID()
             let start = DispatchTime.now().uptimeNanoseconds
             do {
@@ -204,9 +234,9 @@
         }
 
         /// Records a branch that short-circuit evaluation did not execute.
-        /// Outside a trace scope, this method has no effect.
+        /// Without an explicit or default recorder, this method has no effect.
         public static func skip(_ name: String) {
-            guard let context else { return }
+            guard let context = activeContext else { return }
             let id = context.recorder.reserveID()
             context.recorder.append(SpecificationTraceEvent(
                 id: id,
@@ -276,7 +306,7 @@
             self.name = name
         }
 
-        /// Returns the base specification's result and records it within a trace scope.
+        /// Returns the base result and records it when a recorder is active.
         public func isSatisfiedBy(_ candidate: T) -> Bool {
             SpecificationTraceRuntime.withBoolean(name) { base.isSatisfiedBy(candidate) }
         }

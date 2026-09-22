@@ -14,26 +14,41 @@ The trait is disabled by default and requires Swift tools 6.1 or later. Enable i
 )
 ```
 
-The trait makes the trace API and macros available. It does not start recording automatically. Each evaluation needs an explicit trace scope.
+The trait makes the trace API and macros available. Configure a default recorder once at application startup to collect events from instrumented specifications without changing evaluation call sites.
 
-## Record an evaluation
+## Record throughout an application
 
-Create a ``SpecificationTraceRecorder`` and call the appropriate ``SpecificationTraceRuntime`` entry point:
+Set ``SpecificationTraceRuntime/defaultRecorder`` once, then keep calling `isSatisfiedBy(_:)` and `decide(_:)` as usual:
 
 ```swift
 let recorder = SpecificationTraceRecorder()
-let allowed = SpecificationTraceRuntime.evaluate(rule, candidate, recordingTo: recorder)
+SpecificationTraceRuntime.defaultRecorder = recorder
+
+let allowed = rule.isSatisfiedBy(candidate)
 
 for event in recorder.events {
     print(event.id, event.parentID as Any, event.name, event.outcome)
 }
+
+SpecificationTraceRuntime.defaultRecorder = nil // Stop recording when finished.
 ```
 
-Use `evaluateAsync(_:_:recordingTo:)` for ``AsyncSpecification`` values, `decide(_:_:recordingTo:)` for ``DecisionSpec`` values, and `decideAsync(_:_:recordingTo:)` for ``AsyncDecisionSpec`` values. The asynchronous entry points propagate thrown errors, including cancellation. You can inspect the recorder after an error.
+This setting is process-wide and thread-safe. Concurrent evaluations share the recorder, and their root events can interleave. Keep a long-running recorder only as long as needed for diagnostics, since it retains every event until released. Setting the property to `nil` stops new root events; an evaluation already in progress finishes with the recorder it started with.
+
+## Isolate one evaluation
+
+The explicit ``SpecificationTraceRuntime`` entry points remain useful when a tool needs a separate recorder for one operation:
+
+```swift
+let recorder = SpecificationTraceRecorder()
+let allowed = SpecificationTraceRuntime.evaluate(rule, candidate, recordingTo: recorder)
+```
+
+Use `evaluateAsync(_:_:recordingTo:)` for ``AsyncSpecification`` values, `decide(_:_:recordingTo:)` for ``DecisionSpec`` values, and `decideAsync(_:_:recordingTo:)` for ``AsyncDecisionSpec`` values. An explicit scope takes precedence over the process-wide recorder for that task. The asynchronous entry points propagate thrown errors, including cancellation. You can inspect the recorder after an error.
 
 Each ``SpecificationTraceEvent`` has a recorder-local ID, optional parent ID, name, ``SpecificationTraceOutcome``, and duration in nanoseconds. The result of a Boolean evaluation is `.satisfied` or `.unsatisfied`; a decision is `.selected` or `.noMatch`. A branch skipped by short-circuit evaluation has `.skipped` and zero duration. An error produces `.failed` with the error type name, and a thrown `CancellationError` produces `.cancelled`. Events contain no candidate or decision result values.
 
-Events are returned in ID order. A recorder can be shared across tasks, so sibling events from concurrent evaluations may interleave. Parent IDs reconstruct the tree within each scoped evaluation.
+Events are returned in ID order. Parent IDs reconstruct each instrumented evaluation tree, including evaluations captured through the default recorder.
 
 ## Trace custom specifications
 
@@ -54,17 +69,16 @@ For a specification created from a closure, use the `traced(_:)` modifier:
 
 ```swift
 let positive = AnySpecification<Int> { $0 > 0 }.traced("input.positive")
-let recorder = SpecificationTraceRecorder()
-let accepted = SpecificationTraceRuntime.evaluate(positive, 3, recordingTo: recorder)
+let accepted = positive.isSatisfiedBy(3) // Recorded when defaultRecorder is configured.
 ```
 
 The modifier is available for ``Specification``, ``AsyncSpecification``, ``DecisionSpec``, and ``AsyncDecisionSpec``. It returns a named wrapper: ``TracedSpecification``, ``TracedAsyncSpecification``, ``TracedDecisionSpec``, or ``TracedAsyncDecisionSpec``. The wrapper preserves the original result and error behavior.
 
 ## Understand trace coverage
 
-Built-in AND, OR, NOT, first-match, type-erased, and collection evaluation paths emit child events when called within a trace scope. Short-circuited branches are marked `.skipped` and are not evaluated. Calls made inside arbitrary user code appear as child events only when they pass through an instrumented composition or traced method. A macro cannot infer semantic calls inside an arbitrary method body. The `@specs` macro synthesizes composition code whose children are traced by the runtime.
+Built-in AND, OR, NOT, first-match, type-erased, and collection evaluation paths emit child events when a default recorder or explicit scope is active. ``PredicateSpec`` also records its direct evaluations, using its description as the event name when available. Short-circuited branches are marked `.skipped` and are not evaluated. Calls made inside arbitrary user code appear as child events only when they pass through an instrumented composition or traced method. A macro cannot infer semantic calls inside an arbitrary method body. The `@specs` macro synthesizes composition code whose children are traced by the runtime.
 
-Calls outside `SpecificationTraceRuntime` entry points behave normally and record no events. ``SpecificationTraceRecorder`` synchronizes its event storage; it does not export, log, or retain input values. Applications can translate the recorded events to their own diagnostics or observability system.
+Swift cannot intercept every arbitrary `Specification` conformance automatically. Annotate user-defined types with `@TracedSpecification` or wrap values with `.traced(_:)` to give them their own spans. With neither a default recorder nor an explicit scope, all evaluations behave normally and record no events. ``SpecificationTraceRecorder`` synchronizes its event storage; it does not export, log, or retain input values. Applications can translate the recorded events to their own diagnostics or observability system.
 
 ## Topics
 

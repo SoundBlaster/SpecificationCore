@@ -14,7 +14,18 @@ Consumers enable the trait in their package dependency declaration:
 
 The placeholder above should be replaced with the published release version.
 
-## Record an evaluation
+## Configure once for the application
+
+```swift
+let recorder = SpecificationTraceRecorder()
+SpecificationTraceRuntime.defaultRecorder = recorder
+
+let allowed = rule.isSatisfiedBy(candidate) // Existing call site remains unchanged.
+```
+
+The default recorder is process-wide. Set it to `nil` to stop recording new evaluations. It keeps events in memory, so rotate or release a long-running recorder when its events are no longer needed. Instrument custom specifications with `@TracedSpecification` or `.traced(_:)` to give their calls individual spans.
+
+## Isolate one evaluation
 
 ```swift
 let recorder = SpecificationTraceRecorder()
@@ -48,4 +59,4 @@ let rule = AnySpecification<Int> { $0 > 0 }.traced("input.positive")
 
 The runtime also traces the package's AND, OR, NOT, first-match, type-erased, and collection evaluation paths. Short-circuited branches are recorded as `skipped`; they are never evaluated for tracing. A user-defined method's internal calls are visible only when they pass through an instrumented composition or another traced method. Swift macros cannot automatically discover semantic calls inside arbitrary code. The existing `@specs` macro synthesizes its own evaluation method; its generated composition supplies the child trace events.
 
-Tracing is scoped to each explicit entry point. Evaluations outside a trace scope return their usual results and do not create events. A recorder may be shared across tasks and synchronizes access to its event list. Logging and export adapters can consume the events without introducing logging dependencies into SpecificationCore.
+An explicit entry point uses its own recorder for that task and overrides the application-wide default. Without either recorder, evaluations return their usual results and do not create events. A recorder may be shared across tasks and synchronizes access to its event list. Logging and export adapters can consume the events without introducing logging dependencies into SpecificationCore. See the [DocC guide](../Sources/SpecificationCore/Documentation.docc/Tracing.md) for the full API contract.
