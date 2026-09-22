@@ -98,12 +98,31 @@ public struct FirstMatchSpec<Context, Result>: DecisionSpec {
     /// - Parameter context: The context to evaluate against
     /// - Returns: The result of the first satisfied specification, or nil if none are satisfied
     public func decide(_ context: Context) -> Result? {
-        for pair in pairs {
-            if pair.specification.isSatisfiedBy(context) {
-                return pair.result
+        #if Tracing
+            return SpecificationTraceRuntime.withDecision("FirstMatchSpec") {
+                for (index, pair) in pairs.enumerated() {
+                    let matched = SpecificationTraceRuntime.evaluateChild(
+                        pair.specification, context, name: "pair[\(index)]"
+                    )
+                    if matched {
+                        for skippedIndex in pairs.indices where skippedIndex > index {
+                            if !SpecificationTraceRuntime.isExcluded(pairs[skippedIndex].specification) {
+                                SpecificationTraceRuntime.skip("pair[\(skippedIndex)]")
+                            }
+                        }
+                        return pair.result
+                    }
+                }
+                return nil
             }
-        }
-        return nil
+        #else
+            for pair in pairs {
+                if pair.specification.isSatisfiedBy(context) {
+                    return pair.result
+                }
+            }
+            return nil
+        #endif
     }
 
     /// Evaluates the specifications in order and returns the result and metadata of the first one that is satisfied
@@ -111,12 +130,31 @@ public struct FirstMatchSpec<Context, Result>: DecisionSpec {
     /// - Returns: A tuple containing the result and metadata of the first satisfied specification, or nil if none are
     /// satisfied
     public func decideWithMetadata(_ context: Context) -> (result: Result, index: Int)? {
-        for (index, pair) in pairs.enumerated() {
-            if pair.specification.isSatisfiedBy(context) {
-                return (pair.result, index)
+        #if Tracing
+            return SpecificationTraceRuntime.withDecision("FirstMatchSpec.withMetadata") {
+                for (index, pair) in pairs.enumerated() {
+                    let matched = SpecificationTraceRuntime.evaluateChild(
+                        pair.specification, context, name: "pair[\(index)]"
+                    )
+                    if matched {
+                        for skippedIndex in pairs.indices where skippedIndex > index {
+                            if !SpecificationTraceRuntime.isExcluded(pairs[skippedIndex].specification) {
+                                SpecificationTraceRuntime.skip("pair[\(skippedIndex)]")
+                            }
+                        }
+                        return (pair.result, index)
+                    }
+                }
+                return nil
             }
-        }
-        return nil
+        #else
+            for (index, pair) in pairs.enumerated() {
+                if pair.specification.isSatisfiedBy(context) {
+                    return (pair.result, index)
+                }
+            }
+            return nil
+        #endif
     }
 }
 

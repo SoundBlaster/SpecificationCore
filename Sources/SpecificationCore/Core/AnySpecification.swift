@@ -24,7 +24,11 @@ public struct AnySpecification<T>: Specification {
     @usableFromInline
     enum Storage {
         case predicate((T) -> Bool)
-        case specification(any Specification<T>)
+        #if Tracing
+            case specification(any Specification<T>, String)
+        #else
+            case specification(any Specification<T>)
+        #endif
         case constantTrue
         case constantFalse
     }
@@ -45,7 +49,11 @@ public struct AnySpecification<T>: Specification {
             storage = .constantFalse
         } else {
             // Store the specification directly for better performance
-            storage = .specification(specification)
+            #if Tracing
+                storage = .specification(specification, String(reflecting: S.self))
+            #else
+                storage = .specification(specification)
+            #endif
         }
     }
 
@@ -62,16 +70,44 @@ public struct AnySpecification<T>: Specification {
     public func isSatisfiedBy(_ candidate: T) -> Bool {
         switch storage {
         case .constantTrue:
-            return true
+            #if Tracing
+                return SpecificationTraceRuntime.withBoolean("AlwaysTrueSpec") { true }
+            #else
+                return true
+            #endif
         case .constantFalse:
-            return false
+            #if Tracing
+                return SpecificationTraceRuntime.withBoolean("AlwaysFalseSpec") { false }
+            #else
+                return false
+            #endif
         case let .predicate(predicate):
-            return predicate(candidate)
-        case let .specification(spec):
-            return spec.isSatisfiedBy(candidate)
+            #if Tracing
+                return SpecificationTraceRuntime.withBoolean("predicate") { predicate(candidate) }
+            #else
+                return predicate(candidate)
+            #endif
+        #if Tracing
+            case let .specification(spec, name):
+                return SpecificationTraceRuntime.evaluateChild(spec, candidate, name: name)
+        #else
+            case let .specification(spec):
+                return spec.isSatisfiedBy(candidate)
+        #endif
         }
     }
 }
+
+#if Tracing
+    extension AnySpecification: SpecificationTraceExclusion {
+        var excludesSpecificationTracing: Bool {
+            if case let .specification(spec, _) = storage {
+                return SpecificationTraceRuntime.isExcluded(spec)
+            }
+            return false
+        }
+    }
+#endif
 
 // MARK: - Convenience Extensions
 
@@ -108,18 +144,40 @@ public extension Collection where Element: Specification {
     /// - Returns: An AnySpecification that represents the AND of all specifications
     @inlinable
     func allSatisfied() -> AnySpecification<Element.T> {
+        let elementCount = count
         // Optimize for empty collection
-        guard !isEmpty else { return .constantTrue() }
+        guard elementCount > 0 else { return .constantTrue() }
 
         // Optimize for single element
-        if count == 1, let first {
+        if elementCount == 1, let first {
             return AnySpecification(first)
         }
 
         return AnySpecification { candidate in
-            self.allSatisfy { spec in
-                spec.isSatisfiedBy(candidate)
-            }
+            #if Tracing
+                var currentIndex = startIndex
+                var visitedCount = 0
+                while currentIndex != endIndex {
+                    let specification = self[currentIndex]
+                    visitedCount += 1
+                    guard SpecificationTraceRuntime.evaluateChild(
+                        specification, candidate, name: String(reflecting: Element.self)
+                    ) else {
+                        if SpecificationTraceRuntime.isRecording {
+                            for _ in visitedCount ..< elementCount {
+                                SpecificationTraceRuntime.skip(String(reflecting: Element.self))
+                            }
+                        }
+                        return false
+                    }
+                    formIndex(after: &currentIndex)
+                }
+                return true
+            #else
+                self.allSatisfy { spec in
+                    spec.isSatisfiedBy(candidate)
+                }
+            #endif
         }
     }
 
@@ -127,18 +185,40 @@ public extension Collection where Element: Specification {
     /// - Returns: An AnySpecification that represents the OR of all specifications
     @inlinable
     func anySatisfied() -> AnySpecification<Element.T> {
+        let elementCount = count
         // Optimize for empty collection
-        guard !isEmpty else { return .constantFalse() }
+        guard elementCount > 0 else { return .constantFalse() }
 
         // Optimize for single element
-        if count == 1, let first {
+        if elementCount == 1, let first {
             return AnySpecification(first)
         }
 
         return AnySpecification { candidate in
-            self.contains { spec in
-                spec.isSatisfiedBy(candidate)
-            }
+            #if Tracing
+                var currentIndex = startIndex
+                var visitedCount = 0
+                while currentIndex != endIndex {
+                    let specification = self[currentIndex]
+                    visitedCount += 1
+                    if SpecificationTraceRuntime.evaluateChild(
+                        specification, candidate, name: String(reflecting: Element.self)
+                    ) {
+                        if SpecificationTraceRuntime.isRecording {
+                            for _ in visitedCount ..< elementCount {
+                                SpecificationTraceRuntime.skip(String(reflecting: Element.self))
+                            }
+                        }
+                        return true
+                    }
+                    formIndex(after: &currentIndex)
+                }
+                return false
+            #else
+                self.contains { spec in
+                    spec.isSatisfiedBy(candidate)
+                }
+            #endif
         }
     }
 }

@@ -26,8 +26,16 @@ public struct PredicateSpec<T>: Specification {
         self.predicate = predicate
     }
 
+    /// Evaluates the predicate. With tracing enabled and a recorder active,
+    /// records a span named by `description` or the reflected type name.
     public func isSatisfiedBy(_ candidate: T) -> Bool {
-        predicate(candidate)
+        #if Tracing
+            return SpecificationTraceRuntime.withBoolean(description ?? String(reflecting: Self.self)) {
+                predicate(candidate)
+            }
+        #else
+            predicate(candidate)
+        #endif
     }
 }
 
@@ -309,7 +317,28 @@ public extension PredicateSpec {
 
         return PredicateSpec(description: combinedDescription.isEmpty ? nil : combinedDescription) {
             candidate in
-            self.isSatisfiedBy(candidate) && other.isSatisfiedBy(candidate)
+            #if Tracing
+                return SpecificationTraceRuntime.withBoolean("AND") {
+                    let first = SpecificationTraceRuntime.evaluateChild(
+                        self,
+                        candidate,
+                        name: String(reflecting: Self.self)
+                    )
+                    guard first else {
+                        if !SpecificationTraceRuntime.isExcluded(other) {
+                            SpecificationTraceRuntime.skip(String(reflecting: Self.self))
+                        }
+                        return false
+                    }
+                    return SpecificationTraceRuntime.evaluateChild(
+                        other,
+                        candidate,
+                        name: String(reflecting: Self.self)
+                    )
+                }
+            #else
+                self.isSatisfiedBy(candidate) && other.isSatisfiedBy(candidate)
+            #endif
         }
     }
 
@@ -323,7 +352,28 @@ public extension PredicateSpec {
 
         return PredicateSpec(description: combinedDescription.isEmpty ? nil : combinedDescription) {
             candidate in
-            self.isSatisfiedBy(candidate) || other.isSatisfiedBy(candidate)
+            #if Tracing
+                return SpecificationTraceRuntime.withBoolean("OR") {
+                    let first = SpecificationTraceRuntime.evaluateChild(
+                        self,
+                        candidate,
+                        name: String(reflecting: Self.self)
+                    )
+                    if first {
+                        if !SpecificationTraceRuntime.isExcluded(other) {
+                            SpecificationTraceRuntime.skip(String(reflecting: Self.self))
+                        }
+                        return true
+                    }
+                    return SpecificationTraceRuntime.evaluateChild(
+                        other,
+                        candidate,
+                        name: String(reflecting: Self.self)
+                    )
+                }
+            #else
+                self.isSatisfiedBy(candidate) || other.isSatisfiedBy(candidate)
+            #endif
         }
     }
 
@@ -332,7 +382,13 @@ public extension PredicateSpec {
     func not() -> PredicateSpec<T> {
         let negatedDescription = description.map { "NOT (\($0))" }
         return PredicateSpec(description: negatedDescription) { candidate in
-            !self.isSatisfiedBy(candidate)
+            #if Tracing
+                return SpecificationTraceRuntime.withBoolean("NOT") {
+                    !SpecificationTraceRuntime.evaluateChild(self, candidate, name: String(reflecting: Self.self))
+                }
+            #else
+                !self.isSatisfiedBy(candidate)
+            #endif
         }
     }
 }

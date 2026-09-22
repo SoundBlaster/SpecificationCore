@@ -22,7 +22,7 @@ concurrency:
 
 jobs:
   build:
-    runs-on: macos-14
+    runs-on: macos-latest
 
     steps:
       - name: Checkout
@@ -35,7 +35,8 @@ jobs:
 
       - name: Build Documentation
         run: |
-          swift package --allow-writing-to-directory ./docs \
+          swift package --traits Tracing plugin \
+            --allow-writing-to-directory ./docs \
             generate-documentation \
             --target SpecificationCore \
             --output-path ./docs \

@@ -49,10 +49,11 @@ This package is extracted from [SpecificationKit](https://github.com/SoundBlaste
 ### Macros
 - **@specs** - Composite specification synthesis
 - **@AutoContext** - Automatic context provider injection
+- **Tracing trait** - Opt-in evaluation spans, custom specification macros, and named wrappers
 
 ## Requirements
 
-- Swift 5.10+
+- Swift 6.1+ for the current source; the 1.1.0 release supports Swift 5.10+
 - iOS 13.0+ / macOS 10.15+ / tvOS 13.0+ / watchOS 6.0+
 - Linux (Ubuntu 20.04+)
 
@@ -64,7 +65,7 @@ Add SpecificationCore to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/SoundBlaster/SpecificationCore.git", from: "1.0.1")
+    .package(url: "https://github.com/SoundBlaster/SpecificationCore.git", from: "1.1.0")
 ]
 ```
 
@@ -169,6 +170,22 @@ struct PaymentEligibility {
 ```
 
 ## Architecture
+
+### Optional tracing
+
+The `Tracing` SwiftPM trait records the path through synchronous and asynchronous rules. It is disabled by default. Enable it in the package dependency declaration when using a release that contains the trait:
+
+```swift
+.package(
+    url: "https://github.com/SoundBlaster/SpecificationCore.git",
+    from: "<release-containing-Tracing>",
+    traits: ["Tracing"]
+)
+```
+
+Configure `SpecificationTraceRuntime.defaultRecorder = SpecificationTraceRecorder()` once at application startup to capture instrumented evaluations without changing their call sites. `@TracedSpecification("stable.rule.name")` instruments a custom specification's evaluation method; `.traced("stable.rule.name")` wraps a synchronous value built at runtime, and `.tracedAsync("stable.rule.name")` wraps an asynchronous one. See the [DocC tracing guide](Sources/SpecificationCore/Documentation.docc/Tracing.md) for explicit scopes, async calls, outcomes, and coverage limits.
+
+Use `.withoutTracing()` for synchronous specifications and decisions, or `.withoutTracingAsync()` for asynchronous ones, to exclude one evaluation and its nested calls. Use `SpecificationTraceRuntime.withoutRecording { ... }` to suppress an entire operation.
 
 SpecificationCore follows a layered architecture:
 

@@ -15,8 +15,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-14
-            xcode: '15.4'
+          - os: macos-15
+            xcode: '16.4'
           - os: macos-latest
             xcode: 'latest-stable'
     steps:
@@ -36,8 +36,13 @@ jobs:
       - name: Run tests
         run: swift test -v
 
+      - name: Build and test tracing
+        run: |
+          swift build --traits Tracing
+          swift test --traits Tracing
+
       - name: Run Thread Sanitizer
-        if: matrix.xcode == '15.4'
+        if: matrix.xcode == '16.4'
         run: swift test --sanitize=thread
 
   test-linux:
@@ -45,7 +50,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        swift: ['5.10', '6.0']
+        swift: ['6.1', '6.4']
     container:
       image: swift:${{ matrix.swift }}
     steps:

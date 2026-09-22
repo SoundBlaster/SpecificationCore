@@ -135,6 +135,10 @@ var discountType: String
 
 - <doc:SpecificationOperators>
 
+### Diagnostics
+
+- <doc:Tracing>
+
 ## See Also
 
 - [SpecificationKit](https://github.com/yourorg/SpecificationKit) - Platform-specific features and SwiftUI integration

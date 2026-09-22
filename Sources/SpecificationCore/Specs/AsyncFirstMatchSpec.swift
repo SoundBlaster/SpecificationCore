@@ -27,16 +27,38 @@ public struct AsyncFirstMatchSpec<Context, Result>: AsyncDecisionSpec {
 
     /// Returns the first matching result and its zero-based position in the configured pairs.
     public func decideWithMetadata(_ context: Context) async throws -> (result: Result, index: Int)? {
-        try Task.checkCancellation()
-        for (index, pair) in pairs.enumerated() {
-            try Task.checkCancellation()
-            let isSatisfied = try await pair.specification.isSatisfiedBy(context)
-            try Task.checkCancellation()
-            if isSatisfied {
-                return (pair.result, index)
+        #if Tracing
+            return try await SpecificationTraceRuntime.withDecision("AsyncFirstMatchSpec") {
+                try Task.checkCancellation()
+                for (index, pair) in pairs.enumerated() {
+                    try Task.checkCancellation()
+                    let matched = try await SpecificationTraceRuntime.evaluateChild(
+                        pair.specification, context, name: "pair[\(index)]"
+                    )
+                    try Task.checkCancellation()
+                    if matched {
+                        for skippedIndex in pairs.indices where skippedIndex > index {
+                            if !SpecificationTraceRuntime.isExcluded(pairs[skippedIndex].specification) {
+                                SpecificationTraceRuntime.skip("pair[\(skippedIndex)]")
+                            }
+                        }
+                        return (pair.result, index)
+                    }
+                }
+                return nil
             }
-        }
-        return nil
+        #else
+            try Task.checkCancellation()
+            for (index, pair) in pairs.enumerated() {
+                try Task.checkCancellation()
+                let isSatisfied = try await pair.specification.isSatisfiedBy(context)
+                try Task.checkCancellation()
+                if isSatisfied {
+                    return (pair.result, index)
+                }
+            }
+            return nil
+        #endif
     }
 
     /// Creates a first-match decision that returns `fallback` when none of the pairs match.

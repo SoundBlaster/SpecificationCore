@@ -115,14 +115,35 @@ public struct AsyncAndSpecification<Left: AsyncSpecification, Right: AsyncSpecif
     }
 
     public func isSatisfiedBy(_ candidate: T) async throws -> Bool {
-        try Task.checkCancellation()
-        let leftIsSatisfied = try await left.isSatisfiedBy(candidate)
-        try Task.checkCancellation()
-        guard leftIsSatisfied else { return false }
-        try Task.checkCancellation()
-        let rightIsSatisfied = try await right.isSatisfiedBy(candidate)
-        try Task.checkCancellation()
-        return rightIsSatisfied
+        #if Tracing
+            return try await SpecificationTraceRuntime.withBoolean("ASYNC AND") {
+                try Task.checkCancellation()
+                let first = try await SpecificationTraceRuntime.evaluateChild(
+                    left, candidate, name: String(reflecting: Left.self)
+                )
+                try Task.checkCancellation()
+                guard first else {
+                    if !SpecificationTraceRuntime.isExcluded(right) {
+                        SpecificationTraceRuntime.skip(String(reflecting: Right.self))
+                    }
+                    return false
+                }
+                let second = try await SpecificationTraceRuntime.evaluateChild(
+                    right, candidate, name: String(reflecting: Right.self)
+                )
+                try Task.checkCancellation()
+                return second
+            }
+        #else
+            try Task.checkCancellation()
+            let leftIsSatisfied = try await left.isSatisfiedBy(candidate)
+            try Task.checkCancellation()
+            guard leftIsSatisfied else { return false }
+            try Task.checkCancellation()
+            let rightIsSatisfied = try await right.isSatisfiedBy(candidate)
+            try Task.checkCancellation()
+            return rightIsSatisfied
+        #endif
     }
 }
 
@@ -141,16 +162,37 @@ public struct AsyncOrSpecification<Left: AsyncSpecification, Right: AsyncSpecifi
     }
 
     public func isSatisfiedBy(_ candidate: T) async throws -> Bool {
-        try Task.checkCancellation()
-        let leftIsSatisfied = try await left.isSatisfiedBy(candidate)
-        try Task.checkCancellation()
-        if leftIsSatisfied {
-            return true
-        }
-        try Task.checkCancellation()
-        let rightIsSatisfied = try await right.isSatisfiedBy(candidate)
-        try Task.checkCancellation()
-        return rightIsSatisfied
+        #if Tracing
+            return try await SpecificationTraceRuntime.withBoolean("ASYNC OR") {
+                try Task.checkCancellation()
+                let first = try await SpecificationTraceRuntime.evaluateChild(
+                    left, candidate, name: String(reflecting: Left.self)
+                )
+                try Task.checkCancellation()
+                if first {
+                    if !SpecificationTraceRuntime.isExcluded(right) {
+                        SpecificationTraceRuntime.skip(String(reflecting: Right.self))
+                    }
+                    return true
+                }
+                let second = try await SpecificationTraceRuntime.evaluateChild(
+                    right, candidate, name: String(reflecting: Right.self)
+                )
+                try Task.checkCancellation()
+                return second
+            }
+        #else
+            try Task.checkCancellation()
+            let leftIsSatisfied = try await left.isSatisfiedBy(candidate)
+            try Task.checkCancellation()
+            if leftIsSatisfied {
+                return true
+            }
+            try Task.checkCancellation()
+            let rightIsSatisfied = try await right.isSatisfiedBy(candidate)
+            try Task.checkCancellation()
+            return rightIsSatisfied
+        #endif
     }
 }
 
@@ -165,10 +207,21 @@ public struct AsyncNotSpecification<Wrapped: AsyncSpecification>: AsyncSpecifica
     }
 
     public func isSatisfiedBy(_ candidate: T) async throws -> Bool {
-        try Task.checkCancellation()
-        let isSatisfied = try await wrapped.isSatisfiedBy(candidate)
-        try Task.checkCancellation()
-        return !isSatisfied
+        #if Tracing
+            return try await SpecificationTraceRuntime.withBoolean("ASYNC NOT") {
+                try Task.checkCancellation()
+                let result = try await SpecificationTraceRuntime.evaluateChild(
+                    wrapped, candidate, name: String(reflecting: Wrapped.self)
+                )
+                try Task.checkCancellation()
+                return !result
+            }
+        #else
+            try Task.checkCancellation()
+            let isSatisfied = try await wrapped.isSatisfiedBy(candidate)
+            try Task.checkCancellation()
+            return !isSatisfied
+        #endif
     }
 }
 
@@ -213,11 +266,19 @@ public struct AsyncNotSpecification<Wrapped: AsyncSpecification>: AsyncSpecifica
 /// ```
 public struct AnyAsyncSpecification<T>: AsyncSpecification {
     private let _isSatisfied: (T) async throws -> Bool
+    #if Tracing
+        private let traceName: String
+        private let traceExcluded: Bool
+    #endif
 
     /// Creates a type-erased async specification wrapping the given async specification.
     /// - Parameter spec: The async specification to wrap
     public init<S: AsyncSpecification>(_ spec: S) where S.T == T {
         _isSatisfied = spec.isSatisfiedBy
+        #if Tracing
+            traceName = String(reflecting: S.self)
+            traceExcluded = SpecificationTraceRuntime.isExcluded(spec)
+        #endif
     }
 
     /// Creates a type-erased async specification from an async closure.
@@ -225,10 +286,23 @@ public struct AnyAsyncSpecification<T>: AsyncSpecification {
     /// specification
     public init(_ predicate: @escaping (T) async throws -> Bool) {
         _isSatisfied = predicate
+        #if Tracing
+            traceName = "async predicate"
+            traceExcluded = false
+        #endif
     }
 
     public func isSatisfiedBy(_ candidate: T) async throws -> Bool {
-        try await _isSatisfied(candidate)
+        #if Tracing
+            if traceExcluded {
+                return try await SpecificationTraceRuntime.withoutRecording { try await _isSatisfied(candidate) }
+            }
+            return try await SpecificationTraceRuntime.withBoolean(traceName) {
+                try await _isSatisfied(candidate)
+            }
+        #else
+            try await _isSatisfied(candidate)
+        #endif
     }
 }
 
@@ -238,5 +312,17 @@ public extension AnyAsyncSpecification {
     /// Bridge a synchronous specification to async form.
     init<S: Specification>(_ spec: S) where S.T == T {
         _isSatisfied = { candidate in spec.isSatisfiedBy(candidate) }
+        #if Tracing
+            traceName = String(reflecting: S.self)
+            traceExcluded = SpecificationTraceRuntime.isExcluded(spec)
+        #endif
     }
 }
+
+#if Tracing
+    extension AnyAsyncSpecification: SpecificationTraceExclusion {
+        var excludesSpecificationTracing: Bool {
+            traceExcluded
+        }
+    }
+#endif
