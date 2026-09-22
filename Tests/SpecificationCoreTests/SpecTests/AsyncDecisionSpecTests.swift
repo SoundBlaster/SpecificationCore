@@ -12,6 +12,16 @@ final class AsyncDecisionSpecTests: XCTestCase {
         }
     }
 
+    private struct DualDecision: DecisionSpec, AsyncDecisionSpec {
+        func decide(_ context: Int) -> String? {
+            context > 0 ? "positive" : nil
+        }
+
+        func decide(_ context: Int) async throws -> String? {
+            context > 0 ? "positive" : nil
+        }
+    }
+
     func testAsyncDecisionAdapterReturnsResultOnlyWhenSatisfied() async throws {
         let specification = AnyAsyncSpecification<Int> { $0 > 10 }
         let decision = specification.returningAsync("large")
@@ -124,6 +134,26 @@ final class AsyncDecisionSpecTests: XCTestCase {
         XCTAssertFalse(asyncNotResult)
         XCTAssertEqual(asyncDecisionResult, "positive")
     }
+
+    #if Tracing
+        func testDualConformingModifiersAreUnambiguous() async throws {
+            let specification = DualSpecification()
+            XCTAssertTrue(specification.traced("sync").isSatisfiedBy(1))
+            XCTAssertTrue(specification.withoutTracing().isSatisfiedBy(1))
+            let tracedAsyncResult = try await specification.tracedAsync("async").isSatisfiedBy(1)
+            let untracedAsyncResult = try await specification.withoutTracingAsync().isSatisfiedBy(1)
+            XCTAssertTrue(tracedAsyncResult)
+            XCTAssertTrue(untracedAsyncResult)
+
+            let decision = DualDecision()
+            XCTAssertEqual(decision.traced("sync").decide(1), "positive")
+            XCTAssertEqual(decision.withoutTracing().decide(1), "positive")
+            let tracedAsyncDecision = try await decision.tracedAsync("async").decide(1)
+            let untracedAsyncDecision = try await decision.withoutTracingAsync().decide(1)
+            XCTAssertEqual(tracedAsyncDecision, "positive")
+            XCTAssertEqual(untracedAsyncDecision, "positive")
+        }
+    #endif
 
     func testAsyncFirstMatchPropagatesErrors() async {
         enum ExpectedError: Error { case failed }

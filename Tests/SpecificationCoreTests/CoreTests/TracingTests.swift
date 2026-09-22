@@ -24,6 +24,24 @@
             }
         }
 
+        private enum Rejected: Error { case value }
+
+        private struct TypedThrowingSpecification: AsyncSpecification {
+            @TraceEvaluation("typed.boolean")
+            func isSatisfiedBy(_ candidate: Int) async throws(Rejected) -> Bool {
+                if candidate < 0 { throw .value }
+                return candidate > 0
+            }
+        }
+
+        private struct TypedThrowingDecision: AsyncDecisionSpec {
+            @TraceEvaluation("typed.decision")
+            func decide(_ candidate: Int) async throws(Rejected) -> String? {
+                if candidate < 0 { throw .value }
+                return candidate > 0 ? "accepted" : nil
+            }
+        }
+
         func testTypeMacroTracesUserSpecification() {
             let recorder = SpecificationTraceRecorder()
             let result = SpecificationTraceRuntime.evaluate(Positive(), 3, recordingTo: recorder)
@@ -137,6 +155,84 @@
             } catch {
                 XCTFail("Unexpected error: \(error)")
             }
+        }
+
+        func testTypedThrowsMacroPreservesErrorAndRecordsOutcomes() async {
+            let recorder = SpecificationTraceRecorder()
+            do {
+                _ = try await SpecificationTraceRuntime.evaluateAsync(
+                    TypedThrowingSpecification(), -1, recordingTo: recorder
+                )
+                XCTFail("Expected typed rejection")
+            } catch Rejected.value {
+                XCTAssertTrue(recorder.events.contains {
+                    if case .failed = $0.outcome { return $0.name == "typed.boolean" }
+                    return false
+                })
+            } catch {
+                XCTFail("Unexpected error: \(error)")
+            }
+
+            do {
+                _ = try await SpecificationTraceRuntime.decideAsync(
+                    TypedThrowingDecision(), -1, recordingTo: recorder
+                )
+                XCTFail("Expected typed rejection")
+            } catch Rejected.value {
+                XCTAssertTrue(recorder.events.contains {
+                    if case .failed = $0.outcome { return $0.name == "typed.decision" }
+                    return false
+                })
+            } catch {
+                XCTFail("Unexpected error: \(error)")
+            }
+        }
+
+        func testLazyCollectionShortCircuitDoesNotMaterializeUnusedElements() {
+            for recording in [false, true] {
+                var transformed: [Int] = []
+                let all = (0 ..< 3).lazy.map { index -> AnySpecification<Int> in
+                    transformed.append(index)
+                    return AnySpecification { _ in false }
+                }.allSatisfied()
+                let recorder = SpecificationTraceRecorder()
+                let allResult = recording
+                    ? SpecificationTraceRuntime.evaluate(all, 1, recordingTo: recorder)
+                    : all.isSatisfiedBy(1)
+                XCTAssertFalse(allResult)
+                XCTAssertEqual(transformed, [0])
+                if recording {
+                    XCTAssertEqual(recorder.events.filter { $0.outcome == .skipped }.count, 2)
+                }
+
+                transformed.removeAll()
+                let any = (0 ..< 3).lazy.map { index -> AnySpecification<Int> in
+                    transformed.append(index)
+                    return AnySpecification { _ in true }
+                }.anySatisfied()
+                let anyResult = recording
+                    ? SpecificationTraceRuntime.evaluate(any, 1, recordingTo: recorder)
+                    : any.isSatisfiedBy(1)
+                XCTAssertTrue(anyResult)
+                XCTAssertEqual(transformed, [0])
+            }
+        }
+
+        func testLazyCollectionShortCircuitUnderSuppressedRecording() {
+            var transformed: [Int] = []
+            let rule = (0 ..< 3).lazy.map { index -> AnySpecification<Int> in
+                transformed.append(index)
+                return AnySpecification { _ in false }
+            }.allSatisfied()
+            let recorder = SpecificationTraceRecorder()
+
+            let result = SpecificationTraceRuntime.withoutRecording {
+                SpecificationTraceRuntime.evaluate(rule, 1, recordingTo: recorder)
+            }
+
+            XCTAssertFalse(result)
+            XCTAssertEqual(transformed, [0])
+            XCTAssertTrue(recorder.events.isEmpty)
         }
     }
 #endif

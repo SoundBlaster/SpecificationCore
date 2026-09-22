@@ -47,7 +47,8 @@ public struct TraceEvaluationMacro: BodyMacro {
 
         let operation: String
         let async = function.signature.effectSpecifiers?.asyncSpecifier != nil
-        let throwing = function.signature.effectSpecifiers?.throwsSpecifier != nil
+        let throwsClause = function.signature.effectSpecifiers?.throwsClause?.trimmedDescription
+        let throwing = throwsClause != nil
         if function.name.text == "decide" {
             operation = "withDecision"
         } else {
@@ -55,8 +56,8 @@ public struct TraceEvaluationMacro: BodyMacro {
         }
 
         let resultType = function.signature.returnClause?.type.trimmedDescription ?? "Bool"
-        let callPrefix = async ? (throwing ? "try await " : "await ") : ""
-        let closureEffects = async ? (throwing ? " async throws" : " async") : ""
+        let callPrefix = async ? (throwing ? "try await " : "await ") : (throwing ? "try " : "")
+        let closureEffects = (async ? " async" : "") + (throwsClause.map { " \($0)" } ?? "")
         let statements = originalBody.statements
             .map(\.trimmedDescription)
             .joined(separator: "\n")

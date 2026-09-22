@@ -129,6 +129,11 @@
         }
 
         @usableFromInline
+        static var isRecording: Bool {
+            activeContext != nil
+        }
+
+        @usableFromInline
         static func isExcluded(_ specification: Any) -> Bool {
             (specification as? any SpecificationTraceExclusion)?.excludesSpecificationTracing == true
         }
@@ -226,18 +231,31 @@
 
         /// Records an asynchronous throwing Boolean operation and propagates its error.
         /// A thrown `CancellationError` receives the `cancelled` outcome.
-        public static func withBoolean(_ name: String, _ operation: () async throws -> Bool) async throws -> Bool {
+        public static func withBoolean<Failure: Error>(
+            _ name: String,
+            _ operation: () async throws(Failure) -> Bool
+        ) async throws(Failure) -> Bool {
             guard let context = activeContext else { return try await operation() }
             let id = context.recorder.reserveID()
             let start = DispatchTime.now().uptimeNanoseconds
-            do {
-                let result = try await $context.withValue(
-                    Context(recorder: context.recorder, parentID: id),
-                    operation: operation
-                )
+            func capture() async -> Swift.Result<Bool, Failure> {
+                do {
+                    let result = try await operation()
+                    return .success(result)
+                } catch {
+                    return .failure(error)
+                }
+            }
+            let outcome: Swift.Result<Bool, Failure> = await $context.withValue(
+                Context(recorder: context.recorder, parentID: id)
+            ) {
+                await capture()
+            }
+            switch outcome {
+            case let .success(result):
                 finish(id, context, name, result ? .satisfied : .unsatisfied, start)
                 return result
-            } catch {
+            case let .failure(error):
                 finish(
                     id,
                     context,
@@ -273,21 +291,31 @@
         }
 
         /// Records an asynchronous throwing decision and propagates its error.
-        public static func withDecision<Result>(
+        public static func withDecision<Result, Failure: Error>(
             _ name: String,
-            _ operation: () async throws -> Result?
-        ) async throws -> Result? {
+            _ operation: () async throws(Failure) -> Result?
+        ) async throws(Failure) -> Result? {
             guard let context = activeContext else { return try await operation() }
             let id = context.recorder.reserveID()
             let start = DispatchTime.now().uptimeNanoseconds
-            do {
-                let result = try await $context.withValue(
-                    Context(recorder: context.recorder, parentID: id),
-                    operation: operation
-                )
+            func capture() async -> Swift.Result<Result?, Failure> {
+                do {
+                    let result = try await operation()
+                    return .success(result)
+                } catch {
+                    return .failure(error)
+                }
+            }
+            let outcome: Swift.Result<Result?, Failure> = await $context.withValue(
+                Context(recorder: context.recorder, parentID: id)
+            ) {
+                await capture()
+            }
+            switch outcome {
+            case let .success(result):
                 finish(id, context, name, result == nil ? .noMatch : .selected, start)
                 return result
-            } catch {
+            case let .failure(error):
                 finish(
                     id,
                     context,
@@ -442,12 +470,12 @@
 
     public extension AsyncSpecification {
         /// Returns a named tracing wrapper around this asynchronous specification.
-        func traced(_ name: String) -> TracedAsyncSpecification<Self> {
+        func tracedAsync(_ name: String) -> TracedAsyncSpecification<Self> {
             TracedAsyncSpecification(self, name: name)
         }
 
         /// Returns a wrapper whose asynchronous evaluation is omitted from traces.
-        func withoutTracing() -> UntracedAsyncSpecification<Self> {
+        func withoutTracingAsync() -> UntracedAsyncSpecification<Self> {
             UntracedAsyncSpecification(self)
         }
     }
@@ -557,12 +585,12 @@
 
     public extension AsyncDecisionSpec {
         /// Returns a named tracing wrapper around this asynchronous decision specification.
-        func traced(_ name: String) -> TracedAsyncDecisionSpec<Self> {
+        func tracedAsync(_ name: String) -> TracedAsyncDecisionSpec<Self> {
             TracedAsyncDecisionSpec(self, name: name)
         }
 
         /// Returns a wrapper whose asynchronous decision is omitted from traces.
-        func withoutTracing() -> UntracedAsyncDecisionSpec<Self> {
+        func withoutTracingAsync() -> UntracedAsyncDecisionSpec<Self> {
             UntracedAsyncDecisionSpec(self)
         }
     }

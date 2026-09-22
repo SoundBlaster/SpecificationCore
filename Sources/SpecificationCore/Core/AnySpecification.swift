@@ -144,28 +144,33 @@ public extension Collection where Element: Specification {
     /// - Returns: An AnySpecification that represents the AND of all specifications
     @inlinable
     func allSatisfied() -> AnySpecification<Element.T> {
+        let elementCount = count
         // Optimize for empty collection
-        guard !isEmpty else { return .constantTrue() }
+        guard elementCount > 0 else { return .constantTrue() }
 
         // Optimize for single element
-        if count == 1, let first {
+        if elementCount == 1, let first {
             return AnySpecification(first)
         }
 
         return AnySpecification { candidate in
             #if Tracing
-                var iterator = makeIterator()
-                while let specification = iterator.next() {
+                var currentIndex = startIndex
+                var visitedCount = 0
+                while currentIndex != endIndex {
+                    let specification = self[currentIndex]
+                    visitedCount += 1
                     guard SpecificationTraceRuntime.evaluateChild(
                         specification, candidate, name: String(reflecting: Element.self)
                     ) else {
-                        while let remaining = iterator.next() {
-                            if !SpecificationTraceRuntime.isExcluded(remaining) {
+                        if SpecificationTraceRuntime.isRecording {
+                            for _ in visitedCount ..< elementCount {
                                 SpecificationTraceRuntime.skip(String(reflecting: Element.self))
                             }
                         }
                         return false
                     }
+                    formIndex(after: &currentIndex)
                 }
                 return true
             #else
@@ -180,28 +185,33 @@ public extension Collection where Element: Specification {
     /// - Returns: An AnySpecification that represents the OR of all specifications
     @inlinable
     func anySatisfied() -> AnySpecification<Element.T> {
+        let elementCount = count
         // Optimize for empty collection
-        guard !isEmpty else { return .constantFalse() }
+        guard elementCount > 0 else { return .constantFalse() }
 
         // Optimize for single element
-        if count == 1, let first {
+        if elementCount == 1, let first {
             return AnySpecification(first)
         }
 
         return AnySpecification { candidate in
             #if Tracing
-                var iterator = makeIterator()
-                while let specification = iterator.next() {
+                var currentIndex = startIndex
+                var visitedCount = 0
+                while currentIndex != endIndex {
+                    let specification = self[currentIndex]
+                    visitedCount += 1
                     if SpecificationTraceRuntime.evaluateChild(
                         specification, candidate, name: String(reflecting: Element.self)
                     ) {
-                        while let remaining = iterator.next() {
-                            if !SpecificationTraceRuntime.isExcluded(remaining) {
+                        if SpecificationTraceRuntime.isRecording {
+                            for _ in visitedCount ..< elementCount {
                                 SpecificationTraceRuntime.skip(String(reflecting: Element.self))
                             }
                         }
                         return true
                     }
+                    formIndex(after: &currentIndex)
                 }
                 return false
             #else

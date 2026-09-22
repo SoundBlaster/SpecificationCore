@@ -87,4 +87,37 @@ final class TracingMacroTests: XCTestCase {
             macros: macros
         )
     }
+
+    func testBodyMacroPreservesTypedThrowsForBooleanAndDecision() {
+        assertMacroExpansion(
+            """
+            struct TypedCatalogSpec {
+                @TraceEvaluation("catalog.typed-available")
+                func isSatisfiedBy(_ value: String) async throws(Rejected) -> Bool {
+                    try await check(value)
+                }
+
+                @TraceEvaluation("catalog.typed-decision")
+                func decide(_ value: String) async throws(Rejected) -> String? {
+                    try await lookup(value)
+                }
+            }
+            """,
+            expandedSource: """
+            struct TypedCatalogSpec {
+                func isSatisfiedBy(_ value: String) async throws(Rejected) -> Bool {
+                    return try await SpecificationTraceRuntime.withBoolean("catalog.typed-available") { () async throws(Rejected) -> Bool in
+                        try await check(value)
+                    }
+                }
+                func decide(_ value: String) async throws(Rejected) -> String? {
+                    return try await SpecificationTraceRuntime.withDecision("catalog.typed-decision") { () async throws(Rejected) -> String? in
+                        try await lookup(value)
+                    }
+                }
+            }
+            """,
+            macros: macros
+        )
+    }
 }

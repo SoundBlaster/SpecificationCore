@@ -183,9 +183,9 @@ The `Tracing` SwiftPM trait records the path through synchronous and asynchronou
 )
 ```
 
-Configure `SpecificationTraceRuntime.defaultRecorder = SpecificationTraceRecorder()` once at application startup to capture instrumented evaluations without changing their call sites. `@TracedSpecification("stable.rule.name")` instruments a custom specification's evaluation method; `.traced("stable.rule.name")` wraps a value built at runtime. See the [DocC tracing guide](Sources/SpecificationCore/Documentation.docc/Tracing.md) for explicit scopes, async calls, outcomes, and coverage limits.
+Configure `SpecificationTraceRuntime.defaultRecorder = SpecificationTraceRecorder()` once at application startup to capture instrumented evaluations without changing their call sites. `@TracedSpecification("stable.rule.name")` instruments a custom specification's evaluation method; `.traced("stable.rule.name")` wraps a synchronous value built at runtime, and `.tracedAsync("stable.rule.name")` wraps an asynchronous one. See the [DocC tracing guide](Sources/SpecificationCore/Documentation.docc/Tracing.md) for explicit scopes, async calls, outcomes, and coverage limits.
 
-Use `.withoutTracing()` to exclude one specification or decision and its nested evaluations. Use `SpecificationTraceRuntime.withoutRecording { ... }` to suppress an entire operation.
+Use `.withoutTracing()` for synchronous specifications and decisions, or `.withoutTracingAsync()` for asynchronous ones, to exclude one evaluation and its nested calls. Use `SpecificationTraceRuntime.withoutRecording { ... }` to suppress an entire operation.
 
 SpecificationCore follows a layered architecture:
 

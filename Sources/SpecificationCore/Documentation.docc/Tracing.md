@@ -72,7 +72,7 @@ let positive = AnySpecification<Int> { $0 > 0 }.traced("input.positive")
 let accepted = positive.isSatisfiedBy(3) // Recorded when defaultRecorder is configured.
 ```
 
-The modifier is available for ``Specification``, ``AsyncSpecification``, ``DecisionSpec``, and ``AsyncDecisionSpec``. It returns a named wrapper: ``TracedSpecification``, ``TracedAsyncSpecification``, ``TracedDecisionSpec``, or ``TracedAsyncDecisionSpec``. The wrapper preserves the original result and error behavior.
+Use `.tracedAsync(_:)` for ``AsyncSpecification`` and ``AsyncDecisionSpec``. The distinct name keeps calls unambiguous when a type conforms to both the synchronous and asynchronous protocols. These modifiers return ``TracedSpecification``, ``TracedAsyncSpecification``, ``TracedDecisionSpec``, or ``TracedAsyncDecisionSpec``. The wrappers preserve the original result and error behavior. `@TraceEvaluation` also preserves the error type of an `async throws(Failure)` method.
 
 ## Exclude an evaluation
 
@@ -84,7 +84,7 @@ let eligibility = publicCheck.and(privateCheck)
 let allowed = eligibility.isSatisfiedBy(user)
 ```
 
-The modifier is available on the synchronous and asynchronous specification and decision protocols. It returns ``UntracedSpecification``, ``UntracedAsyncSpecification``, ``UntracedDecisionSpec``, or ``UntracedAsyncDecisionSpec``. The result, error propagation, and short-circuit behavior are unchanged. Exclusion is preserved through the package's type-erased wrappers and built-in compositions, including first-match and collection paths. It also takes precedence when `.traced(_:)` is applied after `.withoutTracing()`.
+Use `.withoutTracingAsync()` for asynchronous specifications and decisions. The two names remain unambiguous for types with both conformances. These modifiers return ``UntracedSpecification``, ``UntracedAsyncSpecification``, ``UntracedDecisionSpec``, or ``UntracedAsyncDecisionSpec``. The result, error propagation, and short-circuit behavior are unchanged. Exclusion is preserved through the package's type-erased wrappers and built-in compositions, including first-match and collection paths. It also takes precedence when `.traced(_:)` or `.tracedAsync(_:)` is applied after the corresponding exclusion modifier.
 
 The enclosing composition still records its own outcome. If that outcome is sensitive, suppress the entire operation with ``SpecificationTraceRuntime``'s `withoutRecording(_:)` method:
 
@@ -98,7 +98,7 @@ The suppression scope also applies to nested async calls. Use the asynchronous o
 
 ## Understand trace coverage
 
-Built-in AND, OR, NOT, first-match, type-erased, and collection evaluation paths emit child events when a default recorder or explicit scope is active. ``PredicateSpec`` also records its direct evaluations, using its description as the event name when available. Short-circuited branches are marked `.skipped` and are not evaluated. Calls made inside arbitrary user code appear as child events only when they pass through an instrumented composition or traced method. A macro cannot infer semantic calls inside an arbitrary method body. The `@specs` macro synthesizes composition code whose children are traced by the runtime.
+Built-in AND, OR, NOT, first-match, type-erased, and collection evaluation paths emit child events when a default recorder or explicit scope is active. ``PredicateSpec`` also records its direct evaluations, using its description as the event name when available. Short-circuited branches are marked `.skipped` and are not evaluated. Collection tracing does not materialize unused elements of a lazy collection. Calls made inside arbitrary user code appear as child events only when they pass through an instrumented composition or traced method. A macro cannot infer semantic calls inside an arbitrary method body. The `@specs` macro synthesizes composition code whose children are traced by the runtime.
 
 Swift cannot intercept every arbitrary `Specification` conformance automatically. Annotate user-defined types with `@TracedSpecification` or wrap values with `.traced(_:)` to give them their own spans. With neither a default recorder nor an explicit scope, all evaluations behave normally and record no events. ``SpecificationTraceRecorder`` synchronizes its event storage; it does not export, log, or retain input values. Applications can translate the recorded events to their own diagnostics or observability system.
 

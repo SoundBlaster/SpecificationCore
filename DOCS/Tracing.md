@@ -25,7 +25,7 @@ let allowed = rule.isSatisfiedBy(candidate) // Existing call site remains unchan
 
 The default recorder is process-wide. Set it to `nil` to stop recording new evaluations. It keeps events in memory, so rotate or release a long-running recorder when its events are no longer needed. Instrument custom specifications with `@TracedSpecification` or `.traced(_:)` to give their calls individual spans.
 
-Use `.withoutTracing()` on a specification or decision to omit that evaluation and its nested events while preserving its behavior. An enclosing composition still records its own outcome. Use `SpecificationTraceRuntime.withoutRecording { ... }` when the whole operation must be silent.
+Use `.withoutTracing()` on a synchronous specification or decision, or `.withoutTracingAsync()` on an asynchronous one, to omit that evaluation and its nested events while preserving its behavior. An enclosing composition still records its own outcome. Use `SpecificationTraceRuntime.withoutRecording { ... }` when the whole operation must be silent.
 
 ## Isolate one evaluation
 
@@ -57,6 +57,7 @@ For a rule created from a closure, wrap the value instead:
 
 ```swift
 let rule = AnySpecification<Int> { $0 > 0 }.traced("input.positive")
+let asyncRule = AnyAsyncSpecification<Int> { $0 > 0 }.tracedAsync("input.positive")
 ```
 
 The runtime also traces the package's AND, OR, NOT, first-match, type-erased, and collection evaluation paths. Short-circuited branches are recorded as `skipped`; they are never evaluated for tracing. A user-defined method's internal calls are visible only when they pass through an instrumented composition or another traced method. Swift macros cannot automatically discover semantic calls inside arbitrary code. The existing `@specs` macro synthesizes its own evaluation method; its generated composition supplies the child trace events.
