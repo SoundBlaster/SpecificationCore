@@ -9,7 +9,7 @@ The trait is disabled by default and requires Swift tools 6.1 or later. Enable i
 ```swift
 .package(
     url: "https://github.com/SoundBlaster/SpecificationCore.git",
-    from: "<release-containing-Tracing>",
+    from: "2.0.0",
     traits: ["Tracing"]
 )
 ```

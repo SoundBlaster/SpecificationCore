@@ -2,7 +2,7 @@
 
 Platform-independent foundation for the Specification Pattern in Swift.
 
-[![Swift Version](https://img.shields.io/badge/Swift-5.10+-orange.svg)](https://swift.org)
+[![Swift Version](https://img.shields.io/badge/Swift-6.1+-orange.svg)](https://swift.org)
 [![Platforms](https://img.shields.io/badge/Platforms-iOS%20%7C%20macOS%20%7C%20tvOS%20%7C%20watchOS%20%7C%20Linux-blue.svg)](https://swift.org)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
@@ -53,7 +53,7 @@ This package is extracted from [SpecificationKit](https://github.com/SoundBlaste
 
 ## Requirements
 
-- Swift 6.1+ for the current source; the 1.1.0 release supports Swift 5.10+
+- Swift 6.1+ for SpecificationCore 2.0.0; use 1.1.0 with Swift 5.10–6.0
 - iOS 13.0+ / macOS 10.15+ / tvOS 13.0+ / watchOS 6.0+
 - Linux (Ubuntu 20.04+)
 
@@ -65,7 +65,7 @@ Add SpecificationCore to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/SoundBlaster/SpecificationCore.git", from: "1.1.0")
+    .package(url: "https://github.com/SoundBlaster/SpecificationCore.git", from: "2.0.0")
 ]
 ```
 
@@ -178,7 +178,7 @@ The `Tracing` SwiftPM trait records the path through synchronous and asynchronou
 ```swift
 .package(
     url: "https://github.com/SoundBlaster/SpecificationCore.git",
-    from: "<release-containing-Tracing>",
+    from: "2.0.0",
     traits: ["Tracing"]
 )
 ```

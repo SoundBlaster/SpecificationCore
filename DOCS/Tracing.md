@@ -1,18 +1,16 @@
 # Specification tracing
 
-`Tracing` is an opt-in SwiftPM trait for inspecting specification evaluations. It is disabled by default. The trait raises this package's minimum Swift tools version to 6.1; the next release should therefore use a new major version.
+`Tracing` is an opt-in SwiftPM trait for inspecting specification evaluations. It is disabled by default. It is available starting in SpecificationCore 2.0.0, which requires Swift tools 6.1 or later. SpecificationCore 1.1.0 is the last release compatible with Swift tools 5.10.
 
 Consumers enable the trait in their package dependency declaration:
 
 ```swift
 .package(
     url: "https://github.com/SoundBlaster/SpecificationCore.git",
-    from: "<release-containing-Tracing>",
+    from: "2.0.0",
     traits: ["Tracing"]
 )
 ```
-
-The placeholder above should be replaced with the published release version.
 
 ## Configure once for the application
 
