@@ -145,10 +145,16 @@ public extension Collection where Element: Specification {
 
         return AnySpecification { candidate in
             #if Tracing
-                for specification in self {
+                var iterator = makeIterator()
+                while let specification = iterator.next() {
                     guard SpecificationTraceRuntime.withBoolean(String(reflecting: Element.self), {
                         specification.isSatisfiedBy(candidate)
-                    }) else { return false }
+                    }) else {
+                        while iterator.next() != nil {
+                            SpecificationTraceRuntime.skip(String(reflecting: Element.self))
+                        }
+                        return false
+                    }
                 }
                 return true
             #else
@@ -173,10 +179,14 @@ public extension Collection where Element: Specification {
 
         return AnySpecification { candidate in
             #if Tracing
-                for specification in self {
+                var iterator = makeIterator()
+                while let specification = iterator.next() {
                     if SpecificationTraceRuntime.withBoolean(String(reflecting: Element.self), {
                         specification.isSatisfiedBy(candidate)
                     }) {
+                        while iterator.next() != nil {
+                            SpecificationTraceRuntime.skip(String(reflecting: Element.self))
+                        }
                         return true
                     }
                 }

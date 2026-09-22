@@ -309,7 +309,22 @@ public extension PredicateSpec {
 
         return PredicateSpec(description: combinedDescription.isEmpty ? nil : combinedDescription) {
             candidate in
-            self.isSatisfiedBy(candidate) && other.isSatisfiedBy(candidate)
+            #if Tracing
+                return SpecificationTraceRuntime.withBoolean("AND") {
+                    let first = SpecificationTraceRuntime.withBoolean(String(reflecting: Self.self)) {
+                        self.isSatisfiedBy(candidate)
+                    }
+                    guard first else {
+                        SpecificationTraceRuntime.skip(String(reflecting: Self.self))
+                        return false
+                    }
+                    return SpecificationTraceRuntime.withBoolean(String(reflecting: Self.self)) {
+                        other.isSatisfiedBy(candidate)
+                    }
+                }
+            #else
+                self.isSatisfiedBy(candidate) && other.isSatisfiedBy(candidate)
+            #endif
         }
     }
 
@@ -323,7 +338,22 @@ public extension PredicateSpec {
 
         return PredicateSpec(description: combinedDescription.isEmpty ? nil : combinedDescription) {
             candidate in
-            self.isSatisfiedBy(candidate) || other.isSatisfiedBy(candidate)
+            #if Tracing
+                return SpecificationTraceRuntime.withBoolean("OR") {
+                    let first = SpecificationTraceRuntime.withBoolean(String(reflecting: Self.self)) {
+                        self.isSatisfiedBy(candidate)
+                    }
+                    if first {
+                        SpecificationTraceRuntime.skip(String(reflecting: Self.self))
+                        return true
+                    }
+                    return SpecificationTraceRuntime.withBoolean(String(reflecting: Self.self)) {
+                        other.isSatisfiedBy(candidate)
+                    }
+                }
+            #else
+                self.isSatisfiedBy(candidate) || other.isSatisfiedBy(candidate)
+            #endif
         }
     }
 
@@ -332,7 +362,15 @@ public extension PredicateSpec {
     func not() -> PredicateSpec<T> {
         let negatedDescription = description.map { "NOT (\($0))" }
         return PredicateSpec(description: negatedDescription) { candidate in
-            !self.isSatisfiedBy(candidate)
+            #if Tracing
+                return SpecificationTraceRuntime.withBoolean("NOT") {
+                    !SpecificationTraceRuntime.withBoolean(String(reflecting: Self.self)) {
+                        self.isSatisfiedBy(candidate)
+                    }
+                }
+            #else
+                !self.isSatisfiedBy(candidate)
+            #endif
         }
     }
 }
