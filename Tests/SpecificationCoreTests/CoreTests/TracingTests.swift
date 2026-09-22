@@ -96,7 +96,9 @@
                 XCTFail("Expected the specification error")
             } catch SampleError.rejected {
                 XCTAssertTrue(recorder.events.contains {
-                    if case .failed = $0.outcome { return true }
+                    if case .failed = $0.outcome {
+                        return true
+                    }
                     return false
                 })
             } catch {
