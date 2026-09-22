@@ -8,13 +8,18 @@
     ///
     /// The name should be a stable identifier suitable for tracing systems, such as
     /// `"checkout.cart.eligible"`.
+    /// Supported methods are `isSatisfiedBy(_:)` and `decide(_:)`, including async
+    /// throwing variants. Events are emitted only inside a trace runtime scope.
+    /// See <doc:Tracing> for setup and examples.
     @attached(memberAttribute)
     public macro TracedSpecification(_ name: String) =
         #externalMacro(module: "SpecificationCoreMacros", type: "TracedSpecificationMacro")
 
     /// Adds a trace span around one specification evaluation method.
     ///
-    /// Supported methods are `isSatisfiedBy(_:)` and `decide(_:)`.
+    /// Supported methods are `isSatisfiedBy(_:)` and `decide(_:)`, including async
+    /// throwing variants. The method's result and error behavior are preserved.
+    /// Events are emitted only inside a trace runtime scope. See <doc:Tracing>.
     @attached(body)
     public macro TraceEvaluation(_ name: String) =
         #externalMacro(module: "SpecificationCoreMacros", type: "TraceEvaluationMacro")
