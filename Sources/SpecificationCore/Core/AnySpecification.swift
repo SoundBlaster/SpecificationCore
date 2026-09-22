@@ -176,7 +176,9 @@ public extension Collection where Element: Specification {
                 for specification in self {
                     if SpecificationTraceRuntime.withBoolean(String(reflecting: Element.self), {
                         specification.isSatisfiedBy(candidate)
-                    }) { return true }
+                    }) {
+                        return true
+                    }
                 }
                 return false
             #else
