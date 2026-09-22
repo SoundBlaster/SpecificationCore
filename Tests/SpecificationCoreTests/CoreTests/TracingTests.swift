@@ -29,7 +29,9 @@
         private struct TypedThrowingSpecification: AsyncSpecification {
             @TraceEvaluation("typed.boolean")
             func isSatisfiedBy(_ candidate: Int) async throws(Rejected) -> Bool {
-                if candidate < 0 { throw .value }
+                if candidate < 0 {
+                    throw .value
+                }
                 return candidate > 0
             }
         }
@@ -37,7 +39,9 @@
         private struct TypedThrowingDecision: AsyncDecisionSpec {
             @TraceEvaluation("typed.decision")
             func decide(_ candidate: Int) async throws(Rejected) -> String? {
-                if candidate < 0 { throw .value }
+                if candidate < 0 {
+                    throw .value
+                }
                 return candidate > 0 ? "accepted" : nil
             }
         }
@@ -166,7 +170,9 @@
                 XCTFail("Expected typed rejection")
             } catch Rejected.value {
                 XCTAssertTrue(recorder.events.contains {
-                    if case .failed = $0.outcome { return $0.name == "typed.boolean" }
+                    if case .failed = $0.outcome {
+                        return $0.name == "typed.boolean"
+                    }
                     return false
                 })
             } catch {
@@ -180,7 +186,9 @@
                 XCTFail("Expected typed rejection")
             } catch Rejected.value {
                 XCTAssertTrue(recorder.events.contains {
-                    if case .failed = $0.outcome { return $0.name == "typed.decision" }
+                    if case .failed = $0.outcome {
+                        return $0.name == "typed.decision"
+                    }
                     return false
                 })
             } catch {
