@@ -86,6 +86,8 @@ This repository includes an optional Codex plugin with a skill for designing, im
 
 Install the plugin from that directory in Codex to make the guidance available in projects that use SpecificationCore. This plugin is independent of the Swift package and does not change SwiftPM dependencies or runtime behavior.
 
+The plugin's major and minor version numbers track the SpecificationCore package version. Its patch version may advance independently for plugin-only guidance updates.
+
 ## Quick Start
 
 ### Basic Specification
