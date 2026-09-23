@@ -84,7 +84,14 @@ targets: [
 
 This repository includes an optional Codex plugin with a skill for designing, implementing, and reviewing code that uses SpecificationCore. Find the plugin in [`plugins/specificationcore`](plugins/specificationcore); its skill covers synchronous and asynchronous specifications, typed decisions, composition, tracing, and testing.
 
-Install the plugin from that directory in Codex to make the guidance available in projects that use SpecificationCore. This plugin is independent of the Swift package and does not change SwiftPM dependencies or runtime behavior.
+Install the plugin from this repository's Codex marketplace:
+
+```sh
+codex plugin marketplace add SoundBlaster/SpecificationCore
+codex plugin add specificationcore@specificationcore-repository
+```
+
+The plugin is independent of the Swift package and does not change SwiftPM dependencies or runtime behavior.
 
 The plugin's major and minor version numbers track the SpecificationCore package version. Its patch version may advance independently for plugin-only guidance updates.
 

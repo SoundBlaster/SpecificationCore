@@ -1,0 +1,20 @@
+{
+  "name": "specificationcore-repository",
+  "interface": {
+    "displayName": "SpecificationCore"
+  },
+  "plugins": [
+    {
+      "name": "specificationcore",
+      "source": {
+        "source": "local",
+        "path": "./plugins/specificationcore"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
