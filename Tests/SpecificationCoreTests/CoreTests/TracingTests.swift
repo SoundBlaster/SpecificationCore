@@ -54,6 +54,122 @@
             XCTAssertEqual(recorder.events.first { $0.name == "custom.positive" }?.outcome, .satisfied)
         }
 
+        func testTimelinePositionsRequireExplicitTimeline() throws {
+            let recorder = SpecificationTraceRecorder()
+            XCTAssertTrue(SpecificationTraceRuntime.evaluate(Positive(), 3, recordingTo: recorder))
+
+            let event = try XCTUnwrap(recorder.events.first { $0.name == "custom.positive" })
+            XCTAssertNil(event.startPosition)
+            XCTAssertNil(event.completionPosition)
+
+            let externallyCreatedEvent = SpecificationTraceEvent(
+                id: 1,
+                parentID: nil,
+                name: "adapter.event",
+                outcome: .satisfied,
+                durationNanoseconds: 0
+            )
+            XCTAssertEqual(externallyCreatedEvent.name, "adapter.event")
+            XCTAssertNil(externallyCreatedEvent.startPosition)
+            XCTAssertNil(externallyCreatedEvent.completionPosition)
+        }
+
+        func testDefaultRecorderDoesNotCreateTimeline() throws {
+            let previousRecorder = SpecificationTraceRuntime.defaultRecorder
+            let recorder = SpecificationTraceRecorder()
+            defer { SpecificationTraceRuntime.defaultRecorder = previousRecorder }
+            SpecificationTraceRuntime.defaultRecorder = recorder
+
+            XCTAssertTrue(Positive().traced("default.positive").isSatisfiedBy(3))
+
+            let event = try XCTUnwrap(recorder.events.first { $0.name == "default.positive" })
+            XCTAssertNil(event.startPosition)
+            XCTAssertNil(event.completionPosition)
+        }
+
+        func testExplicitTimelinePositionsBracketEvaluationAndConsumerMarks() throws {
+            let timeline = SpecificationTraceTimeline()
+            let recorder = SpecificationTraceRecorder(timeline: timeline)
+            let before = timeline.mark()
+            let specification = AnySpecification<Int> { $0 > 0 }.traced("input.positive")
+
+            XCTAssertTrue(SpecificationTraceRuntime.evaluate(specification, 1, recordingTo: recorder))
+            let after = timeline.mark()
+
+            let events = recorder.events
+            let root = try XCTUnwrap(events.first { $0.name == "input.positive" })
+            let child = try XCTUnwrap(events.first { $0.parentID == root.id })
+            let start = try XCTUnwrap(root.startPosition)
+            let completion = try XCTUnwrap(root.completionPosition)
+            let childStart = try XCTUnwrap(child.startPosition)
+            let childCompletion = try XCTUnwrap(child.completionPosition)
+
+            XCTAssertLessThan(before.sequence, start.sequence)
+            XCTAssertLessThan(start.sequence, childStart.sequence)
+            XCTAssertLessThan(childCompletion.sequence, completion.sequence)
+            XCTAssertLessThan(completion.sequence, after.sequence)
+            XCTAssertLessThanOrEqual(start.elapsedNanoseconds, completion.elapsedNanoseconds)
+            XCTAssertEqual(root.durationNanoseconds, completion.elapsedNanoseconds - start.elapsedNanoseconds)
+            XCTAssertLessThan(childStart.sequence, childCompletion.sequence)
+        }
+
+        func testMultipleRecordersCanShareOneTimeline() throws {
+            let timeline = SpecificationTraceTimeline()
+            let firstRecorder = SpecificationTraceRecorder(timeline: timeline)
+            let secondRecorder = SpecificationTraceRecorder(timeline: timeline)
+            let firstStart = timeline.mark()
+
+            XCTAssertTrue(SpecificationTraceRuntime.evaluate(Positive(), 1, recordingTo: firstRecorder))
+            let between = timeline.mark()
+            XCTAssertTrue(SpecificationTraceRuntime.evaluate(Positive(), 2, recordingTo: secondRecorder))
+            let after = timeline.mark()
+
+            let first = try XCTUnwrap(firstRecorder.events.first { $0.name == "custom.positive" })
+            let second = try XCTUnwrap(secondRecorder.events.first { $0.name == "custom.positive" })
+            let firstCompletion = try XCTUnwrap(first.completionPosition)
+            let secondStart = try XCTUnwrap(second.startPosition)
+            let secondCompletion = try XCTUnwrap(second.completionPosition)
+
+            XCTAssertLessThan(firstStart.sequence, firstCompletion.sequence)
+            XCTAssertLessThan(firstCompletion.sequence, between.sequence)
+            XCTAssertLessThan(between.sequence, secondStart.sequence)
+            XCTAssertLessThan(secondStart.sequence, secondCompletion.sequence)
+            XCTAssertLessThan(secondCompletion.sequence, after.sequence)
+        }
+
+        func testTimelineMarksStayUniqueAndMonotonicAcrossTasks() async {
+            let timeline = SpecificationTraceTimeline()
+            let positions = await withTaskGroup(of: SpecificationTracePosition.self) { group in
+                for _ in 0 ..< 100 {
+                    group.addTask { timeline.mark() }
+                }
+
+                var collected: [SpecificationTracePosition] = []
+                for await position in group {
+                    collected.append(position)
+                }
+                return collected
+            }
+            let ordered = positions.sorted { $0.sequence < $1.sequence }
+
+            XCTAssertEqual(Set(ordered.map(\.sequence)).count, 100)
+            XCTAssertEqual(ordered.map(\.sequence), (1 ... 100).map { UInt64($0) })
+            XCTAssertTrue(zip(ordered, ordered.dropFirst()).allSatisfy {
+                $0.elapsedNanoseconds <= $1.elapsedNanoseconds
+            })
+        }
+
+        func testSkippedBranchUsesOneInstantOnExplicitTimeline() throws {
+            let timeline = SpecificationTraceTimeline()
+            let recorder = SpecificationTraceRecorder(timeline: timeline)
+            let rule = AnySpecification<Int> { _ in false }.and(AnySpecification<Int> { _ in true })
+
+            XCTAssertFalse(SpecificationTraceRuntime.evaluate(rule, 0, recordingTo: recorder))
+
+            let skipped = try XCTUnwrap(recorder.events.first { $0.outcome == .skipped })
+            XCTAssertEqual(skipped.startPosition, skipped.completionPosition)
+        }
+
         func testTypeMacroTracesAsyncUserSpecification() async throws {
             let recorder = SpecificationTraceRecorder()
             let result = try await SpecificationTraceRuntime.evaluateAsync(AsyncPositive(), 3, recordingTo: recorder)
@@ -111,7 +227,7 @@
         func testAsyncErrorIsRecordedAndRethrown() async {
             enum SampleError: Error { case rejected }
             let specification = AnyAsyncSpecification<Int> { _ in throw SampleError.rejected }
-            let recorder = SpecificationTraceRecorder()
+            let recorder = SpecificationTraceRecorder(timeline: SpecificationTraceTimeline())
 
             do {
                 _ = try await SpecificationTraceRuntime.evaluateAsync(specification, 1, recordingTo: recorder)
@@ -119,7 +235,7 @@
             } catch SampleError.rejected {
                 XCTAssertTrue(recorder.events.contains {
                     if case .failed = $0.outcome {
-                        return true
+                        return $0.startPosition != nil && $0.completionPosition != nil
                     }
                     return false
                 })
@@ -145,7 +261,7 @@
                 try Task.checkCancellation()
                 return true
             }
-            let recorder = SpecificationTraceRecorder()
+            let recorder = SpecificationTraceRecorder(timeline: SpecificationTraceTimeline())
             let task = Task {
                 try await SpecificationTraceRuntime.evaluateAsync(specification, 1, recordingTo: recorder)
             }
@@ -155,7 +271,9 @@
                 _ = try await task.value
                 XCTFail("Expected cancellation")
             } catch is CancellationError {
-                XCTAssertTrue(recorder.events.contains { $0.outcome == .cancelled })
+                XCTAssertTrue(recorder.events.contains {
+                    $0.outcome == .cancelled && $0.startPosition != nil && $0.completionPosition != nil
+                })
             } catch {
                 XCTFail("Unexpected error: \(error)")
             }

@@ -1,6 +1,6 @@
 # Proposal: Shared trace timeline metadata
 
-**Status:** Draft; API choices resolved for implementation
+**Status:** API choices resolved; implementation included in this PR
 
 **Date:** 2026-09-24
 
@@ -47,7 +47,8 @@ public final class SpecificationTraceTimeline: @unchecked Sendable {
 }
 
 public final class SpecificationTraceRecorder: @unchecked Sendable {
-    public init(timeline: SpecificationTraceTimeline? = nil)
+    public convenience init()
+    public init(timeline: SpecificationTraceTimeline)
 }
 ```
 
@@ -83,7 +84,7 @@ This snippet belongs in an async throwing context. The important contract is tha
 
 ## Compatibility
 
-The additions are source-compatible: `SpecificationTraceRecorder()` continues to work, event IDs and parent IDs keep their current meaning, and the duration property remains unchanged. The existing `SpecificationTraceEvent` initializer must remain callable with its current arguments. An extended initializer can achieve this with trailing `startPosition: SpecificationTracePosition? = nil` and `completionPosition: SpecificationTracePosition? = nil` parameters, or by retaining the existing initializer as an overload. Merely making the new parameter types optional is insufficient in Swift. Existing consumers may ignore the new fields.
+The additions are source-compatible: `SpecificationTraceRecorder()` continues to work, event IDs and parent IDs keep their current meaning, and the duration property remains available. Keep the existing `SpecificationTraceEvent` initializer with its current five arguments as an overload; add a second initializer that accepts the two position values. Existing consumers may ignore the new fields.
 
 The runtime must behave identically when no trace is recorded. Timeline allocation and marks occur only on traced paths.
 
@@ -91,7 +92,7 @@ The runtime must behave identically when no trace is recorded. Timeline allocati
 
 - Verify sequence numbers increase across marks from multiple recorders sharing one timeline.
 - Verify elapsed offsets never decrease as sequences increase, including concurrent marks.
-- Verify evaluation start precedes completion and the position delta is consistent with the separately measured duration, allowing for mark and clock-call overhead.
+- Verify evaluation start precedes completion and, when positions are present, their elapsed-time delta equals the event duration.
 - Verify nested parent relationships and recorder-local IDs remain unchanged.
 - Verify `SpecificationTraceRecorder()` and a process-wide `defaultRecorder` emit no positions across multiple independent evaluations, while explicit per-operation timelines remain isolated.
 - Compile an adapter using the existing five-argument `SpecificationTraceEvent` initializer without changes.

@@ -38,6 +38,18 @@ for event in recorder.events {
 
 Use `evaluateAsync`, `decide`, or `decideAsync` for the corresponding protocol. The async entry points rethrow evaluation errors. The recorder remains available after a thrown error, so diagnostics can still inspect completed events. Events contain a name, parent ID, outcome, and duration. They do not contain candidate or result values.
 
+To interleave specification evaluations with lifecycle events from another component, explicitly share one `SpecificationTraceTimeline` for a single logical operation:
+
+```swift
+let timeline = SpecificationTraceTimeline()
+let recorder = SpecificationTraceRecorder(timeline: timeline)
+let requestStarted = timeline.mark()
+let accepted = SpecificationTraceRuntime.evaluate(orderEligibility, order, recordingTo: recorder)
+let decisionCompleted = timeline.mark()
+```
+
+Each Core event then includes `startPosition` and `completionPosition`. A position contains a unique sequence and monotonic elapsed nanoseconds from the timeline's creation. Sort all event positions by sequence; keep `id` and `parentID` local to their recorder. `SpecificationTraceRecorder()` and a `defaultRecorder` created without a timeline continue to record without positions. Do not reuse one timeline across unrelated operations.
+
 ## Trace custom specifications
 
 ```swift

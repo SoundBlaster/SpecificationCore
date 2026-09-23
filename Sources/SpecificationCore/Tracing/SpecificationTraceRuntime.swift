@@ -35,6 +35,10 @@
         public let outcome: SpecificationTraceOutcome
         /// The measured duration; zero for a skipped branch.
         public let durationNanoseconds: UInt64
+        /// The monotonic start position when the recorder has a shared timeline.
+        public let startPosition: SpecificationTracePosition?
+        /// The monotonic completion position when the recorder has a shared timeline.
+        public let completionPosition: SpecificationTracePosition?
 
         /// Creates a trace event for an external event consumer or adapter.
         public init(
@@ -44,22 +48,59 @@
             outcome: SpecificationTraceOutcome,
             durationNanoseconds: UInt64
         ) {
+            self.init(
+                id: id,
+                parentID: parentID,
+                name: name,
+                outcome: outcome,
+                durationNanoseconds: durationNanoseconds,
+                startPosition: nil,
+                completionPosition: nil
+            )
+        }
+
+        /// Creates a trace event with optional positions on a shared timeline.
+        public init(
+            id: Int,
+            parentID: Int?,
+            name: String,
+            outcome: SpecificationTraceOutcome,
+            durationNanoseconds: UInt64,
+            startPosition: SpecificationTracePosition?,
+            completionPosition: SpecificationTracePosition?
+        ) {
             self.id = id
             self.parentID = parentID
             self.name = name
             self.outcome = outcome
             self.durationNanoseconds = durationNanoseconds
+            self.startPosition = startPosition
+            self.completionPosition = completionPosition
         }
     }
 
     /// Thread-safe storage for events from one or more evaluations.
     public final class SpecificationTraceRecorder: @unchecked Sendable {
         private let lock = NSLock()
+        private let timeline: SpecificationTraceTimeline?
         private var nextID = 0
         private var storedEvents: [SpecificationTraceEvent] = []
 
         /// Creates an empty recorder that may be shared across tasks.
-        public init() {}
+        ///
+        /// Events from this recorder do not receive timeline positions.
+        public convenience init() {
+            self.init(timeline: nil)
+        }
+
+        /// Creates a recorder whose events share positions with the supplied timeline.
+        public init(timeline: SpecificationTraceTimeline) {
+            self.timeline = timeline
+        }
+
+        private init(timeline: SpecificationTraceTimeline?) {
+            self.timeline = timeline
+        }
 
         /// A snapshot of completed events in recorder-local ID order.
         public var events: [SpecificationTraceEvent] {
@@ -68,11 +109,20 @@
             return storedEvents.sorted { $0.id < $1.id }
         }
 
-        fileprivate func reserveID() -> Int {
+        fileprivate func reserve() -> (id: Int, startUptimeNanoseconds: UInt64, position: SpecificationTracePosition?) {
             lock.lock()
             defer { lock.unlock() }
             nextID += 1
-            return nextID
+            let position = timeline?.mark()
+            return (
+                id: nextID,
+                startUptimeNanoseconds: DispatchTime.now().uptimeNanoseconds,
+                position: position
+            )
+        }
+
+        fileprivate func mark() -> SpecificationTracePosition? {
+            timeline?.mark()
         }
 
         fileprivate func append(_ event: SpecificationTraceEvent) {
@@ -190,18 +240,25 @@
         }
 
         private static func finish(
-            _ id: Int,
             _ context: Context,
             _ name: String,
             _ outcome: SpecificationTraceOutcome,
-            _ start: UInt64
+            _ start: (id: Int, startUptimeNanoseconds: UInt64, position: SpecificationTracePosition?)
         ) {
+            let completionPosition = context.recorder.mark()
+            let durationNanoseconds: UInt64 = if let startPosition = start.position, let completionPosition {
+                completionPosition.elapsedNanoseconds - startPosition.elapsedNanoseconds
+            } else {
+                DispatchTime.now().uptimeNanoseconds - start.startUptimeNanoseconds
+            }
             context.recorder.append(SpecificationTraceEvent(
-                id: id,
+                id: start.id,
                 parentID: context.parentID,
                 name: name,
                 outcome: outcome,
-                durationNanoseconds: DispatchTime.now().uptimeNanoseconds - start
+                durationNanoseconds: durationNanoseconds,
+                startPosition: start.position,
+                completionPosition: completionPosition
             ))
         }
 
@@ -209,23 +266,24 @@
         /// Without an explicit or default recorder, runs without recording.
         public static func withBoolean(_ name: String, _ operation: () -> Bool) -> Bool {
             guard let context = activeContext else { return operation() }
-            let id = context.recorder.reserveID()
-            let start = DispatchTime.now().uptimeNanoseconds
-            let result = $context.withValue(Context(recorder: context.recorder, parentID: id), operation: operation)
-            finish(id, context, name, result ? .satisfied : .unsatisfied, start)
+            let start = context.recorder.reserve()
+            let result = $context.withValue(
+                Context(recorder: context.recorder, parentID: start.id),
+                operation: operation
+            )
+            finish(context, name, result ? .satisfied : .unsatisfied, start)
             return result
         }
 
         /// Records an asynchronous Boolean operation in the active trace context.
         public static func withBoolean(_ name: String, _ operation: () async -> Bool) async -> Bool {
             guard let context = activeContext else { return await operation() }
-            let id = context.recorder.reserveID()
-            let start = DispatchTime.now().uptimeNanoseconds
+            let start = context.recorder.reserve()
             let result = await $context.withValue(
-                Context(recorder: context.recorder, parentID: id),
+                Context(recorder: context.recorder, parentID: start.id),
                 operation: operation
             )
-            finish(id, context, name, result ? .satisfied : .unsatisfied, start)
+            finish(context, name, result ? .satisfied : .unsatisfied, start)
             return result
         }
 
@@ -236,8 +294,7 @@
             _ operation: () async throws(Failure) -> Bool
         ) async throws(Failure) -> Bool {
             guard let context = activeContext else { return try await operation() }
-            let id = context.recorder.reserveID()
-            let start = DispatchTime.now().uptimeNanoseconds
+            let start = context.recorder.reserve()
             func capture() async -> Swift.Result<Bool, Failure> {
                 do {
                     let result = try await operation()
@@ -247,17 +304,16 @@
                 }
             }
             let outcome: Swift.Result<Bool, Failure> = await $context.withValue(
-                Context(recorder: context.recorder, parentID: id)
+                Context(recorder: context.recorder, parentID: start.id)
             ) {
                 await capture()
             }
             switch outcome {
             case let .success(result):
-                finish(id, context, name, result ? .satisfied : .unsatisfied, start)
+                finish(context, name, result ? .satisfied : .unsatisfied, start)
                 return result
             case let .failure(error):
                 finish(
-                    id,
                     context,
                     name,
                     error is CancellationError ? .cancelled : .failed(String(reflecting: type(of: error))),
@@ -270,23 +326,24 @@
         /// Records a synchronous optional decision as selected or unmatched.
         public static func withDecision<Result>(_ name: String, _ operation: () -> Result?) -> Result? {
             guard let context = activeContext else { return operation() }
-            let id = context.recorder.reserveID()
-            let start = DispatchTime.now().uptimeNanoseconds
-            let result = $context.withValue(Context(recorder: context.recorder, parentID: id), operation: operation)
-            finish(id, context, name, result == nil ? .noMatch : .selected, start)
+            let start = context.recorder.reserve()
+            let result = $context.withValue(
+                Context(recorder: context.recorder, parentID: start.id),
+                operation: operation
+            )
+            finish(context, name, result == nil ? .noMatch : .selected, start)
             return result
         }
 
         /// Records an asynchronous optional decision as selected or unmatched.
         public static func withDecision<Result>(_ name: String, _ operation: () async -> Result?) async -> Result? {
             guard let context = activeContext else { return await operation() }
-            let id = context.recorder.reserveID()
-            let start = DispatchTime.now().uptimeNanoseconds
+            let start = context.recorder.reserve()
             let result = await $context.withValue(
-                Context(recorder: context.recorder, parentID: id),
+                Context(recorder: context.recorder, parentID: start.id),
                 operation: operation
             )
-            finish(id, context, name, result == nil ? .noMatch : .selected, start)
+            finish(context, name, result == nil ? .noMatch : .selected, start)
             return result
         }
 
@@ -296,8 +353,7 @@
             _ operation: () async throws(Failure) -> Result?
         ) async throws(Failure) -> Result? {
             guard let context = activeContext else { return try await operation() }
-            let id = context.recorder.reserveID()
-            let start = DispatchTime.now().uptimeNanoseconds
+            let start = context.recorder.reserve()
             func capture() async -> Swift.Result<Result?, Failure> {
                 do {
                     let result = try await operation()
@@ -307,17 +363,16 @@
                 }
             }
             let outcome: Swift.Result<Result?, Failure> = await $context.withValue(
-                Context(recorder: context.recorder, parentID: id)
+                Context(recorder: context.recorder, parentID: start.id)
             ) {
                 await capture()
             }
             switch outcome {
             case let .success(result):
-                finish(id, context, name, result == nil ? .noMatch : .selected, start)
+                finish(context, name, result == nil ? .noMatch : .selected, start)
                 return result
             case let .failure(error):
                 finish(
-                    id,
                     context,
                     name,
                     error is CancellationError ? .cancelled : .failed(String(reflecting: type(of: error))),
@@ -331,13 +386,16 @@
         /// Without an explicit or default recorder, this method has no effect.
         public static func skip(_ name: String) {
             guard let context = activeContext else { return }
-            let id = context.recorder.reserveID()
+            let position = context.recorder.mark()
+            let id = context.recorder.reserve().id
             context.recorder.append(SpecificationTraceEvent(
                 id: id,
                 parentID: context.parentID,
                 name: name,
                 outcome: .skipped,
-                durationNanoseconds: 0
+                durationNanoseconds: 0,
+                startPosition: position,
+                completionPosition: position
             ))
         }
 
