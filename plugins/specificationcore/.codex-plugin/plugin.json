@@ -1,0 +1,30 @@
+{
+  "name": "specificationcore",
+  "version": "2.0.0",
+  "description": "Practical Codex guidance for using the SpecificationCore Swift framework.",
+  "author": {
+    "name": "SoundBlaster"
+  },
+  "repository": "https://github.com/SoundBlaster/SpecificationCore",
+  "license": "MIT",
+  "keywords": [
+    "swift",
+    "specification-pattern",
+    "business-rules",
+    "tracing"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "SpecificationCore",
+    "shortDescription": "Build clear, composable Swift specifications.",
+    "longDescription": "Guidance for synchronous and asynchronous specifications, typed decisions, composition, tracing, and tests.",
+    "developerName": "SoundBlaster",
+    "category": "Productivity",
+    "capabilities": [],
+    "defaultPrompt": [
+      "Help me model this rule with SpecificationCore.",
+      "Review this SpecificationCore composition.",
+      "Add tracing to these specifications."
+    ]
+  }
+}
