@@ -2,6 +2,24 @@
 import XCTest
 
 final class AsyncDecisionSpecTests: XCTestCase {
+    private actor AsyncStartSignal {
+        private var started = false
+        private var continuation: CheckedContinuation<Void, Never>?
+
+        func markStarted() {
+            started = true
+            continuation?.resume()
+            continuation = nil
+        }
+
+        func waitUntilStarted() async {
+            guard !started else { return }
+            await withCheckedContinuation { continuation in
+                self.continuation = continuation
+            }
+        }
+    }
+
     private struct DualSpecification: Specification, AsyncSpecification {
         func isSatisfiedBy(_ candidate: Int) -> Bool {
             candidate > 0
@@ -171,10 +189,18 @@ final class AsyncDecisionSpecTests: XCTestCase {
     }
 
     func testAsyncFirstMatchHonorsTaskCancellation() async {
+        let started = AsyncStartSignal()
+        let blockingSpecification = AnyAsyncSpecification<Int> { _ in
+            await started.markStarted()
+            try await Task.sleep(nanoseconds: 100_000_000)
+            return true
+        }
         let decision = AsyncFirstMatchSpec<Int, String>.builder()
+            .add(blockingSpecification, result: "matched")
             .fallback("fallback")
             .build()
         let task = Task { try await decision.decide(0) }
+        await started.waitUntilStarted()
         task.cancel()
 
         do {

@@ -386,16 +386,15 @@
         /// Without an explicit or default recorder, this method has no effect.
         public static func skip(_ name: String) {
             guard let context = activeContext else { return }
-            let position = context.recorder.mark()
-            let id = context.recorder.reserve().id
+            let start = context.recorder.reserve()
             context.recorder.append(SpecificationTraceEvent(
-                id: id,
+                id: start.id,
                 parentID: context.parentID,
                 name: name,
                 outcome: .skipped,
                 durationNanoseconds: 0,
-                startPosition: position,
-                completionPosition: position
+                startPosition: start.position,
+                completionPosition: start.position
             ))
         }
 

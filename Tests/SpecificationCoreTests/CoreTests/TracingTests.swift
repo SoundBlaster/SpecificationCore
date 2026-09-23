@@ -159,6 +159,60 @@
             })
         }
 
+        func testConcurrentNestedEvaluationsKeepParentIDsAndTimelinePositions() async throws {
+            let timeline = SpecificationTraceTimeline()
+            let recorder = SpecificationTraceRecorder(timeline: timeline)
+            let specification = AnyAsyncSpecification<Int> { value in
+                await Task.yield()
+                return value.isMultiple(of: 2)
+            }.tracedAsync("concurrent.child")
+
+            let results = try await withThrowingTaskGroup(of: (Int, Bool).self) { group in
+                for value in 0 ..< 40 {
+                    group.addTask {
+                        let result = try await SpecificationTraceRuntime.evaluateAsync(
+                            specification,
+                            value,
+                            recordingTo: recorder
+                        )
+                        return (value, result)
+                    }
+                }
+
+                var collected: [(Int, Bool)] = []
+                for try await result in group {
+                    collected.append(result)
+                }
+                return collected
+            }
+
+            XCTAssertEqual(results.count, 40)
+            XCTAssertTrue(results.allSatisfy { $0.1 == $0.0.isMultiple(of: 2) })
+
+            let events = recorder.events
+            let roots = events.filter { $0.parentID == nil }
+            let children = events.filter { $0.name == "concurrent.child" }
+            XCTAssertEqual(roots.count, 40)
+            XCTAssertEqual(children.count, 40)
+
+            let eventsByID = Dictionary(uniqueKeysWithValues: events.map { ($0.id, $0) })
+            for child in children {
+                let parent = try XCTUnwrap(child.parentID.flatMap { eventsByID[$0] })
+                XCTAssertNil(parent.parentID)
+                let parentStart = try XCTUnwrap(parent.startPosition)
+                let childStart = try XCTUnwrap(child.startPosition)
+                let childCompletion = try XCTUnwrap(child.completionPosition)
+                let parentCompletion = try XCTUnwrap(parent.completionPosition)
+                XCTAssertLessThan(parentStart.sequence, childStart.sequence)
+                XCTAssertLessThan(childCompletion.sequence, parentCompletion.sequence)
+            }
+
+            let positions = events.flatMap { event in
+                [event.startPosition, event.completionPosition].compactMap { $0 }
+            }
+            XCTAssertEqual(Set(positions.map(\.sequence)).count, positions.count)
+        }
+
         func testSkippedBranchUsesOneInstantOnExplicitTimeline() throws {
             let timeline = SpecificationTraceTimeline()
             let recorder = SpecificationTraceRecorder(timeline: timeline)
