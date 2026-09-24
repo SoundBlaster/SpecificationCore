@@ -1,13 +1,13 @@
 # Specification tracing
 
-`Tracing` is an opt-in SwiftPM trait for inspecting specification evaluations. It is disabled by default. It is available starting in SpecificationCore 2.0.0, which requires Swift tools 6.1 or later. SpecificationCore 1.1.0 is the last release compatible with Swift tools 5.10.
+`Tracing` is an opt-in SwiftPM trait for inspecting specification evaluations. It is disabled by default and first became available in SpecificationCore 2.0.0, which requires Swift tools 6.1 or later. SpecificationCore 2.1.0 adds explicit operation-scoped timeline positions. SpecificationCore 1.1.0 is the last release compatible with Swift tools 5.10.
 
 Consumers enable the trait in their package dependency declaration:
 
 ```swift
 .package(
     url: "https://github.com/SoundBlaster/SpecificationCore.git",
-    from: "2.0.0",
+    from: "2.1.0",
     traits: ["Tracing"]
 )
 ```
@@ -48,7 +48,7 @@ let accepted = SpecificationTraceRuntime.evaluate(orderEligibility, order, recor
 let decisionCompleted = timeline.mark()
 ```
 
-Each Core event then includes `startPosition` and `completionPosition`. A position contains a unique sequence and monotonic elapsed nanoseconds from the timeline's creation. Sort all event positions by sequence; keep `id` and `parentID` local to their recorder. `SpecificationTraceRecorder()` and a `defaultRecorder` created without a timeline continue to record without positions. Do not reuse one timeline across unrelated operations.
+Each Core event then includes `startPosition` and `completionPosition`. A position contains a unique sequence and monotonic elapsed nanoseconds from the timeline's creation. Sort all event positions by sequence; keep `id` and `parentID` local to their recorder. `SpecificationTraceRecorder()` and a `defaultRecorder` created without a timeline continue to record without positions. Callers can assign a recorder initialized with an explicit timeline to `defaultRecorder`. Do not reuse one timeline across unrelated operations.
 
 ## Trace custom specifications
 

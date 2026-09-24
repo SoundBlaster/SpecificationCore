@@ -1,6 +1,6 @@
 # Trace Specification Evaluations
 
-Inspect the evaluation path of synchronous and asynchronous specifications with the optional `Tracing` SwiftPM trait.
+Inspect the evaluation path of synchronous and asynchronous specifications with the optional `Tracing` SwiftPM trait. SpecificationCore 2.1.0 adds operation-scoped monotonic positions for correlating Core spans with events from other components.
 
 ## Enable tracing
 
@@ -9,7 +9,7 @@ The trait is disabled by default and requires Swift tools 6.1 or later. Enable i
 ```swift
 .package(
     url: "https://github.com/SoundBlaster/SpecificationCore.git",
-    from: "2.0.0",
+    from: "2.1.0",
     traits: ["Tracing"]
 )
 ```
@@ -33,7 +33,7 @@ for event in recorder.events {
 SpecificationTraceRuntime.defaultRecorder = nil // Stop recording when finished.
 ```
 
-This setting is process-wide and thread-safe. Concurrent evaluations share the recorder, and their root events can interleave. Keep a long-running recorder only as long as needed for diagnostics, since it retains every event until released. Setting the property to `nil` stops new root events; an evaluation already in progress finishes with the recorder it started with.
+This setting is process-wide and thread-safe. Concurrent evaluations share the recorder, and their root events can interleave. The default recorder does not create a timeline, so its events do not receive positions that imply a total order across operations. Keep a long-running recorder only as long as needed for diagnostics, since it retains every event until released. Setting the property to `nil` stops new root events; an evaluation already in progress finishes with the recorder it started with.
 
 ## Isolate one evaluation
 
@@ -76,7 +76,7 @@ func evaluateOrder(_ order: Order) async throws -> Bool {
 
 Positions contain a strictly increasing sequence and monotonic elapsed nanoseconds relative to that timeline. The sequence is authoritative when elapsed offsets tie at clock resolution. A traced evaluation records `startPosition` and `completionPosition`; a skipped branch uses the same position for both. Sort events from all producers by sequence to interleave them, and keep `parentID` scoped to its recorder when reconstructing Core's tree.
 
-``SpecificationTraceRecorder()`` does not create a timeline, so its events have no positions. The process-wide ``SpecificationTraceRuntime/defaultRecorder`` likewise creates no implicit shared scale. A timeline must be supplied explicitly, and should not be shared across unrelated logical operations.
+``SpecificationTraceRecorder()`` does not create a timeline, so its events have no positions. The process-wide ``SpecificationTraceRuntime/defaultRecorder`` does not create a timeline implicitly; however, callers may assign a recorder initialized with an explicit timeline, in which case its events do receive positions. A timeline must be supplied explicitly, and should not be shared across unrelated logical operations.
 
 ## Trace custom specifications
 
