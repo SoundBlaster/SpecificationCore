@@ -49,7 +49,7 @@ This package is extracted from [SpecificationKit](https://github.com/SoundBlaste
 ### Macros
 - **@specs** - Composite specification synthesis
 - **@AutoContext** - Automatic context provider injection
-- **Tracing trait** - Opt-in evaluation spans, custom specification macros, and named wrappers
+- **Tracing trait** - Opt-in evaluation spans, custom specification macros, named wrappers, and operation-scoped timeline positions
 
 ## Requirements
 
@@ -65,7 +65,7 @@ Add SpecificationCore to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/SoundBlaster/SpecificationCore.git", from: "2.0.0")
+    .package(url: "https://github.com/SoundBlaster/SpecificationCore.git", from: "2.1.0")
 ]
 ```
 
@@ -188,17 +188,33 @@ struct PaymentEligibility {
 
 ### Optional tracing
 
-The `Tracing` SwiftPM trait records the path through synchronous and asynchronous rules. It is disabled by default. Enable it in the package dependency declaration when using a release that contains the trait:
+The `Tracing` SwiftPM trait records the path through synchronous and asynchronous rules. It is disabled by default. SpecificationCore 2.1.0 adds an explicit monotonic timeline for correlating evaluation spans with events from other components:
 
 ```swift
 .package(
     url: "https://github.com/SoundBlaster/SpecificationCore.git",
-    from: "2.0.0",
+    from: "2.1.0",
     traits: ["Tracing"]
 )
 ```
 
 Configure `SpecificationTraceRuntime.defaultRecorder = SpecificationTraceRecorder()` once at application startup to capture instrumented evaluations without changing their call sites. `@TracedSpecification("stable.rule.name")` instruments a custom specification's evaluation method; `.traced("stable.rule.name")` wraps a synchronous value built at runtime, and `.tracedAsync("stable.rule.name")` wraps an asynchronous one. See the [DocC tracing guide](Sources/SpecificationCore/Documentation.docc/Tracing.md) for explicit scopes, async calls, outcomes, and coverage limits.
+
+Use `SpecificationTraceTimeline` when multiple event producers need a shared order for one operation:
+
+```swift
+let timeline = SpecificationTraceTimeline()
+let recorder = SpecificationTraceRecorder(timeline: timeline)
+let operationStarted = timeline.mark()
+let allowed = SpecificationTraceRuntime.evaluate(rule, candidate, recordingTo: recorder)
+let operationCompleted = timeline.mark()
+
+for event in recorder.events {
+    print(event.name, event.startPosition as Any, event.completionPosition as Any)
+}
+```
+
+The timeline's sequence orders Core spans and caller-owned lifecycle events. A plain `SpecificationTraceRecorder()` and the process-wide `defaultRecorder` do not create implicit cross-operation order; supply the same explicit timeline to every producer participating in one operation.
 
 Use `.withoutTracing()` for synchronous specifications and decisions, or `.withoutTracingAsync()` for asynchronous ones, to exclude one evaluation and its nested calls. Use `SpecificationTraceRuntime.withoutRecording { ... }` to suppress an entire operation.
 

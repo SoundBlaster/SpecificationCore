@@ -1,6 +1,6 @@
 # Trace Specification Evaluations
 
-Inspect the evaluation path of synchronous and asynchronous specifications with the optional `Tracing` SwiftPM trait.
+Inspect the evaluation path of synchronous and asynchronous specifications with the optional `Tracing` SwiftPM trait. SpecificationCore 2.1.0 adds operation-scoped monotonic positions for correlating Core spans with events from other components.
 
 ## Enable tracing
 
@@ -9,7 +9,7 @@ The trait is disabled by default and requires Swift tools 6.1 or later. Enable i
 ```swift
 .package(
     url: "https://github.com/SoundBlaster/SpecificationCore.git",
-    from: "2.0.0",
+    from: "2.1.0",
     traits: ["Tracing"]
 )
 ```
@@ -33,7 +33,7 @@ for event in recorder.events {
 SpecificationTraceRuntime.defaultRecorder = nil // Stop recording when finished.
 ```
 
-This setting is process-wide and thread-safe. Concurrent evaluations share the recorder, and their root events can interleave. Keep a long-running recorder only as long as needed for diagnostics, since it retains every event until released. Setting the property to `nil` stops new root events; an evaluation already in progress finishes with the recorder it started with.
+This setting is process-wide and thread-safe. Concurrent evaluations share the recorder, and their root events can interleave. The default recorder does not create a timeline, so its events do not receive positions that imply a total order across operations. Keep a long-running recorder only as long as needed for diagnostics, since it retains every event until released. Setting the property to `nil` stops new root events; an evaluation already in progress finishes with the recorder it started with.
 
 ## Isolate one evaluation
 
