@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-09-24
+
 ### Added
 - Shared monotonic trace timelines for correlating specification spans with lifecycle events in one operation.
 - Start and completion positions on traced evaluations when a recorder is given an explicit timeline.
