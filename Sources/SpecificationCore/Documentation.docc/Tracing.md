@@ -50,6 +50,34 @@ Each ``SpecificationTraceEvent`` has a recorder-local ID, optional parent ID, na
 
 Events are returned in ID order. Parent IDs reconstruct each instrumented evaluation tree, including evaluations captured through the default recorder.
 
+## Correlate events from multiple components
+
+Recorder-local IDs cannot order events from different recorders. To place specification spans beside lifecycle events from an integrating library, create one ``SpecificationTraceTimeline`` for that logical operation and pass it explicitly to the recorder and event producer:
+
+```swift
+func evaluateOrder(_ order: Order) async throws -> Bool {
+    let timeline = SpecificationTraceTimeline()
+    let recorder = SpecificationTraceRecorder(timeline: timeline)
+    let requestPosition = timeline.mark()
+    let allowed = try await SpecificationTraceRuntime.evaluateAsync(
+        orderEligibility,
+        order,
+        recordingTo: recorder
+    )
+    let decisionPosition = timeline.mark()
+
+    print(requestPosition.sequence, decisionPosition.sequence)
+    for event in recorder.events {
+        print(event.name, event.startPosition as Any, event.completionPosition as Any)
+    }
+    return allowed
+}
+```
+
+Positions contain a strictly increasing sequence and monotonic elapsed nanoseconds relative to that timeline. The sequence is authoritative when elapsed offsets tie at clock resolution. A traced evaluation records `startPosition` and `completionPosition`; a skipped branch uses the same position for both. Sort events from all producers by sequence to interleave them, and keep `parentID` scoped to its recorder when reconstructing Core's tree.
+
+``SpecificationTraceRecorder()`` does not create a timeline, so its events have no positions. The process-wide ``SpecificationTraceRuntime/defaultRecorder`` likewise creates no implicit shared scale. A timeline must be supplied explicitly, and should not be shared across unrelated logical operations.
+
 ## Trace custom specifications
 
 Attach ``TracedSpecification(_:)`` to a user-defined type to instrument its supported evaluation methods without changing their bodies:
@@ -108,6 +136,8 @@ Swift cannot intercept every arbitrary `Specification` conformance automatically
 
 - ``SpecificationTraceRuntime``
 - ``SpecificationTraceRecorder``
+- ``SpecificationTraceTimeline``
+- ``SpecificationTracePosition``
 - ``SpecificationTraceEvent``
 - ``SpecificationTraceOutcome``
 
