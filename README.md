@@ -214,7 +214,7 @@ for event in recorder.events {
 }
 ```
 
-The timeline's sequence orders Core spans and caller-owned lifecycle events. A plain `SpecificationTraceRecorder()` and the process-wide `defaultRecorder` do not create implicit cross-operation order; supply the same explicit timeline to every producer participating in one operation.
+The timeline's sequence orders Core spans and caller-owned lifecycle events. A plain `SpecificationTraceRecorder()` and the process-wide `defaultRecorder` do not create a timeline implicitly; callers may assign a recorder initialized with an explicit timeline to `defaultRecorder`. Supply the same explicit timeline to every producer participating in one operation.
 
 Use `.withoutTracing()` for synchronous specifications and decisions, or `.withoutTracingAsync()` for asynchronous ones, to exclude one evaluation and its nested calls. Use `SpecificationTraceRuntime.withoutRecording { ... }` to suppress an entire operation.
 

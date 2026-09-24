@@ -76,7 +76,7 @@ func evaluateOrder(_ order: Order) async throws -> Bool {
 
 Positions contain a strictly increasing sequence and monotonic elapsed nanoseconds relative to that timeline. The sequence is authoritative when elapsed offsets tie at clock resolution. A traced evaluation records `startPosition` and `completionPosition`; a skipped branch uses the same position for both. Sort events from all producers by sequence to interleave them, and keep `parentID` scoped to its recorder when reconstructing Core's tree.
 
-``SpecificationTraceRecorder()`` does not create a timeline, so its events have no positions. The process-wide ``SpecificationTraceRuntime/defaultRecorder`` likewise creates no implicit shared scale. A timeline must be supplied explicitly, and should not be shared across unrelated logical operations.
+``SpecificationTraceRecorder()`` does not create a timeline, so its events have no positions. The process-wide ``SpecificationTraceRuntime/defaultRecorder`` does not create a timeline implicitly; however, callers may assign a recorder initialized with an explicit timeline, in which case its events do receive positions. A timeline must be supplied explicitly, and should not be shared across unrelated logical operations.
 
 ## Trace custom specifications
 

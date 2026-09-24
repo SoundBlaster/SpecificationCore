@@ -48,7 +48,7 @@ let accepted = SpecificationTraceRuntime.evaluate(orderEligibility, order, recor
 let decisionCompleted = timeline.mark()
 ```
 
-Each Core event then includes `startPosition` and `completionPosition`. A position contains a unique sequence and monotonic elapsed nanoseconds from the timeline's creation. Sort all event positions by sequence; keep `id` and `parentID` local to their recorder. `SpecificationTraceRecorder()` and a `defaultRecorder` created without a timeline continue to record without positions. Do not reuse one timeline across unrelated operations.
+Each Core event then includes `startPosition` and `completionPosition`. A position contains a unique sequence and monotonic elapsed nanoseconds from the timeline's creation. Sort all event positions by sequence; keep `id` and `parentID` local to their recorder. `SpecificationTraceRecorder()` and a `defaultRecorder` created without a timeline continue to record without positions. Callers can assign a recorder initialized with an explicit timeline to `defaultRecorder`. Do not reuse one timeline across unrelated operations.
 
 ## Trace custom specifications
 
