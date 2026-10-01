@@ -1,6 +1,6 @@
 ---
 name: specification-patterns
-description: Decide where SpecificationCore clarifies domain policy and where ordinary control flow is the better fit; use when designing or refactoring decision-heavy code.
+description: Decide where SpecificationCore clarifies domain policy; use when designing or refactoring decision-heavy code, explaining pattern benefits and trade-offs, or evaluating refactoring pilots.
 ---
 
 # Shape code around semantic decisions
@@ -8,6 +8,12 @@ description: Decide where SpecificationCore clarifies domain policy and where or
 Use this skill to put stable domain decisions in named, testable specifications without turning every branch into a specification. A syntactic opportunity is a prompt to inspect intent, not an instruction to refactor.
 
 For exact APIs, first check the consuming project's resolved SpecificationCore version, then follow the [SpecificationCore API skill](../specificationcore/SKILL.md).
+
+## Understand the benefit
+
+SpecificationCore provides a common way to name, compose, test, observe, and change domain rules. Its value includes a consistent development style for humans and agents: callers consume a policy contract instead of reconstructing its conditions. A useful extraction can also expose duplicated rules, unreachable fallbacks, or a decision being recomputed in the wrong layer.
+
+Evaluate the whole decision family, including specifications and their callers. A shorter caller is useful evidence, but does not show that total complexity or duplication fell. For choosing a refactor, explaining its benefit, or assessing a pilot, read [Benefits and evidence](references/benefits-and-evidence.md).
 
 ## Decide whether a branch expresses policy
 
@@ -35,6 +41,8 @@ Model one semantic decision per specification. Do not create one specification f
 
 Use Boolean specifications for predicates. Use `FirstMatchSpec` for ordered alternatives and make the fallback explicit. Preserve a meaningful no-match result when absence is part of the contract; do not silently turn it into a fallback. Keep priority order observable and deliberate.
 
+When alternatives produce the same outcome and priority has no semantic meaning, prefer one Boolean specification with explicit composition rather than an ordered decision table. Keep independent observations independent: for example, an operation can be a no-op while findings still prevent readiness.
+
 For example, a routing decision can use an immutable context and typed outcomes:
 
 ```swift
@@ -56,10 +64,12 @@ The caller remains responsible for enforcing the outcome; evaluating the specifi
 ## Implement and verify
 
 1. Record the current behavior as a decision table: input facts, outcome, precedence, no-match/error behavior, and effects owned by the caller.
+   Trace the production callers and producer guarantees. A fallback tested with constructed inputs can still be unreachable in the real pipeline; distinguish reachable behavior from obsolete or contradictory logic before extraction.
 2. Separate facts already available at the decision boundary from parsing and external work. Build a typed context from those facts.
 3. Name the semantic rules and outcomes. Extract only the policy decision; leave mechanical branches and orchestration in their current owners.
 4. Compare observable behavior before and after, including warning/error details and side-effect timing where relevant.
 5. Test every outcome, overlapping rules and priority, fallback/no-match, and representative malformed or boundary inputs. If tracing is enabled, assert stable semantic rule names and skipped later branches.
 6. Review the diff for unnecessary modules, duplicated rule logic, new dependencies, and decision logic that has leaked into adapters or orchestration.
+7. State the observed benefit: shared policy consumers, duplicate rules removed, boundaries restored, useful traces, or reduced caller complexity. Distinguish these results from expectations about future bugs or change cost.
 
 Prefer a behavior-preserving refactor. Do not change the business rule, externally visible output, error contract, or side-effect order unless the user explicitly requested that change.
