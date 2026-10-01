@@ -7,6 +7,12 @@ description: Use when designing, implementing, or reviewing Swift code that uses
 
 Help the user express business rules as small, typed, composable specifications. Fit the existing code and the resolved SpecificationCore version; do not invent APIs or change package versions as part of an application-level task.
 
+## Explain why the pattern helps
+
+Use specifications as a consistent contract for domain decisions: a named rule, typed input, explicit composition, focused tests, and optional tracing. This makes policies easier to locate and evolve across consumers, and helps humans and agents follow the same structure. These benefits depend on the application actually using that contract; extracting a class alone does not establish reuse, observability, or reduced change cost.
+
+For candidate selection and behavior-preserving refactoring, follow the [Specification patterns skill](../specification-patterns/SKILL.md). When explaining trade-offs or evaluating results, use its [Benefits and evidence](../specification-patterns/references/benefits-and-evidence.md) guide. Keep API guidance here and evaluation guidance there.
+
 ## Establish the API version
 
 Before proposing code, inspect the consuming project's `Package.resolved` and `Package.swift`. Confirm the SpecificationCore version, Swift tools version, and whether the `Tracing` trait is enabled. Use the API for that resolved version, not automatically the latest API.
