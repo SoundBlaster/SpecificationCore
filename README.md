@@ -82,7 +82,7 @@ targets: [
 
 ## Codex plugin
 
-This repository includes an optional Codex plugin with a skill for designing, implementing, and reviewing code that uses SpecificationCore. Find the plugin in [`plugins/specificationcore`](plugins/specificationcore); its skill covers synchronous and asynchronous specifications, typed decisions, composition, tracing, and testing.
+This repository includes an optional Codex plugin with skills for using SpecificationCore and deciding where specification-oriented refactoring fits. Find them in [`plugins/specificationcore`](plugins/specificationcore); they cover synchronous and asynchronous specifications, typed decisions, composition, tracing, tests, and keeping policy separate from mechanical control flow.
 
 Install the plugin from this repository's Codex marketplace:
 
