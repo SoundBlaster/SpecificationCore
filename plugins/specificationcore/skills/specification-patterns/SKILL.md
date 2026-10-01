@@ -1,6 +1,6 @@
 ---
 name: specification-patterns
-description: Decide where SpecificationCore clarifies domain policy and where ordinary control flow is the better fit; use when designing or refactoring decision-heavy code.
+description: Decide where SpecificationCore clarifies domain policy; use when designing or refactoring decision-heavy code, explaining pattern benefits and trade-offs, or evaluating refactoring pilots.
 ---
 
 # Shape code around semantic decisions
