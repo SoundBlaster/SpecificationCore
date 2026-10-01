@@ -1,6 +1,6 @@
 {
   "name": "specificationcore",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Practical Codex guidance for using the SpecificationCore Swift framework.",
   "author": {
     "name": "SoundBlaster"
@@ -17,13 +17,14 @@
   "interface": {
     "displayName": "SpecificationCore",
     "shortDescription": "Build clear, composable Swift specifications.",
-    "longDescription": "Guidance for synchronous and asynchronous specifications, typed decisions, composition, tracing, and tests.",
+    "longDescription": "Guidance for decision-oriented refactoring, synchronous and asynchronous specifications, typed composition, tracing, and tests.",
     "developerName": "SoundBlaster",
     "category": "Productivity",
     "capabilities": [],
     "defaultPrompt": [
       "Help me model this rule with SpecificationCore.",
       "Review this SpecificationCore composition.",
+      "Refactor this decision logic into focused specifications without changing behavior.",
       "Add tracing to these specifications."
     ]
   }
