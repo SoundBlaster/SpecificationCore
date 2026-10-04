@@ -71,22 +71,32 @@ public struct FirstMatchSpec<Context, Result>: DecisionSpec {
     public typealias SpecificationPair = (specification: AnySpecification<Context>, result: Result)
 
     /// The specification-result pairs to evaluate in order
-    private let pairs: [SpecificationPair]
+    @usableFromInline let pairs: [SpecificationPair]
 
     /// Metadata about the matched specification, if available
-    private let includeMetadata: Bool
+    @usableFromInline let includeMetadata: Bool
 
+    // swiftformat:disable docComments
     /// Creates a new FirstMatchSpec with the given specification-result pairs
     /// - Parameter pairs: An array of specification-result pairs to evaluate in order
     /// - Parameter includeMetadata: Whether to include metadata about the matched specification
+    #if !Tracing
+        @inlinable
+    #endif
     public init(_ pairs: [SpecificationPair], includeMetadata: Bool = false) {
         self.pairs = pairs
         self.includeMetadata = includeMetadata
     }
 
+    // swiftformat:enable docComments
+
+    // swiftformat:disable docComments
     /// Creates a new FirstMatchSpec with specification-result pairs
     /// - Parameter pairs: Specification-result pairs to evaluate in order
     /// - Parameter includeMetadata: Whether to include metadata about the matched specification
+    #if !Tracing
+        @inlinable
+    #endif
     public init<S: Specification>(_ pairs: [(S, Result)], includeMetadata: Bool = false)
         where S.T == Context
     {
@@ -94,9 +104,15 @@ public struct FirstMatchSpec<Context, Result>: DecisionSpec {
         self.includeMetadata = includeMetadata
     }
 
+    // swiftformat:enable docComments
+
+    // swiftformat:disable docComments
     /// Evaluates the specifications in order and returns the result of the first one that is satisfied
     /// - Parameter context: The context to evaluate against
     /// - Returns: The result of the first satisfied specification, or nil if none are satisfied
+    #if !Tracing
+        @inlinable
+    #endif
     public func decide(_ context: Context) -> Result? {
         #if Tracing
             return SpecificationTraceRuntime.withDecision("FirstMatchSpec") {
@@ -125,10 +141,16 @@ public struct FirstMatchSpec<Context, Result>: DecisionSpec {
         #endif
     }
 
+    // swiftformat:enable docComments
+
+    // swiftformat:disable docComments
     /// Evaluates the specifications in order and returns the result and metadata of the first one that is satisfied
     /// - Parameter context: The context to evaluate against
     /// - Returns: A tuple containing the result and metadata of the first satisfied specification, or nil if none are
     /// satisfied
+    #if !Tracing
+        @inlinable
+    #endif
     public func decideWithMetadata(_ context: Context) -> (result: Result, index: Int)? {
         #if Tracing
             return SpecificationTraceRuntime.withDecision("FirstMatchSpec.withMetadata") {
@@ -156,6 +178,7 @@ public struct FirstMatchSpec<Context, Result>: DecisionSpec {
             return nil
         #endif
     }
+    // swiftformat:enable docComments
 }
 
 // MARK: - Convenience Extensions

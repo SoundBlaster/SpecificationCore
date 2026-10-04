@@ -95,6 +95,50 @@ jobs:
             echo "No changed Swift files to format-check."
           fi
 
+  policy-performance:
+    name: Cross-module Release policy performance
+    runs-on: macos-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate report parser and regression gate
+        run: python3 scripts/test_policy_performance_report.py
+      - name: Compare the same consumer against baseline and candidate
+        env:
+          POLICY_BASELINE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          baseline="$POLICY_BASELINE_SHA"
+          if [[ -z "$baseline" || "$baseline" =~ ^0+$ ]]; then
+            baseline=origin/main
+          fi
+          python3 scripts/compare_policy_performance.py --baseline-ref "$baseline"
+      - name: Publish comparison summary
+        if: always()
+        run: |
+          if [[ -f .build/policy-performance/report.md ]]; then
+            cat .build/policy-performance/report.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Publish raw benchmark evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cross-module-policy-performance
+          path: |
+            .build/policy-performance/*.csv
+            .build/policy-performance/*.json
+            .build/policy-performance/*.md
+            .build/policy-performance/*.log
+          if-no-files-found: warn
+          retention-days: 14
+
   build-release:
     name: Build Release Configuration
     runs-on: macos-latest

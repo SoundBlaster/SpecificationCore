@@ -109,6 +109,7 @@ public protocol Specification<T> {
 /// These methods enable composition of specifications using boolean logic, allowing you to
 /// build complex business rules from simple, focused specifications.
 public extension Specification {
+    // swiftformat:disable docComments spaceInsideComments
     /**
      * Creates a new specification that represents the logical AND of this specification and another.
      *
@@ -129,6 +130,9 @@ public extension Specification {
      * // Returns true only if user is both adult AND citizen
      * ```
      */
+    #if !Tracing
+        @inlinable
+    #endif
     func and<Other: Specification>(_ other: Other) -> AndSpecification<Self, Other>
         where Other.T == T
     {
@@ -155,6 +159,9 @@ public extension Specification {
      * // Returns true if date is weekend OR holiday
      * ```
      */
+    #if !Tracing
+        @inlinable
+    #endif
     func or<Other: Specification>(_ other: Other) -> OrSpecification<Self, Other>
         where Other.T == T
     {
@@ -179,9 +186,13 @@ public extension Specification {
      * // Returns true if date is NOT a working day
      * ```
      */
+    #if !Tracing
+        @inlinable
+    #endif
     func not() -> NotSpecification<Self> {
         NotSpecification(wrapped: self)
     }
+    // swiftformat:enable docComments spaceInsideComments
 }
 
 // MARK: - Composite Specifications
@@ -210,20 +221,32 @@ public struct AndSpecification<Left: Specification, Right: Specification>: Speci
     /// The context type that both specifications evaluate.
     public typealias T = Left.T
 
-    private let left: Left
-    private let right: Right
+    @usableFromInline let left: Left
+    @usableFromInline let right: Right
 
+    // swiftformat:disable redundantMemberwiseInit
+    #if !Tracing
+        @inlinable
+    #else
+        @usableFromInline
+    #endif
     init(left: Left, right: Right) {
         self.left = left
         self.right = right
     }
 
+    // swiftformat:enable redundantMemberwiseInit
+
+    // swiftformat:disable docComments spaceInsideComments
     /**
      * Evaluates whether both specifications are satisfied by the context.
      *
      * - Parameter candidate: The context to evaluate.
      * - Returns: `true` if both specifications are satisfied, `false` otherwise.
      */
+    #if !Tracing
+        @inlinable
+    #endif
     public func isSatisfiedBy(_ candidate: T) -> Bool {
         #if Tracing
             return SpecificationTraceRuntime.withBoolean("AND") {
@@ -244,6 +267,7 @@ public struct AndSpecification<Left: Specification, Right: Specification>: Speci
             left.isSatisfiedBy(candidate) && right.isSatisfiedBy(candidate)
         #endif
     }
+    // swiftformat:enable docComments spaceInsideComments
 }
 
 /// A specification that combines two specifications with OR logic.
@@ -270,20 +294,32 @@ public struct OrSpecification<Left: Specification, Right: Specification>: Specif
     /// The context type that both specifications evaluate.
     public typealias T = Left.T
 
-    private let left: Left
-    private let right: Right
+    @usableFromInline let left: Left
+    @usableFromInline let right: Right
 
+    // swiftformat:disable redundantMemberwiseInit
+    #if !Tracing
+        @inlinable
+    #else
+        @usableFromInline
+    #endif
     init(left: Left, right: Right) {
         self.left = left
         self.right = right
     }
 
+    // swiftformat:enable redundantMemberwiseInit
+
+    // swiftformat:disable docComments spaceInsideComments
     /**
      * Evaluates whether either specification is satisfied by the context.
      *
      * - Parameter candidate: The context to evaluate.
      * - Returns: `true` if either specification is satisfied, `false` otherwise.
      */
+    #if !Tracing
+        @inlinable
+    #endif
     public func isSatisfiedBy(_ candidate: T) -> Bool {
         #if Tracing
             return SpecificationTraceRuntime.withBoolean("OR") {
@@ -304,6 +340,7 @@ public struct OrSpecification<Left: Specification, Right: Specification>: Specif
             left.isSatisfiedBy(candidate) || right.isSatisfiedBy(candidate)
         #endif
     }
+    // swiftformat:enable docComments spaceInsideComments
 }
 
 /// A specification that negates another specification.
@@ -326,18 +363,30 @@ public struct NotSpecification<Wrapped: Specification>: Specification {
     /// The context type that the wrapped specification evaluates.
     public typealias T = Wrapped.T
 
-    private let wrapped: Wrapped
+    @usableFromInline let wrapped: Wrapped
 
+    // swiftformat:disable redundantMemberwiseInit
+    #if !Tracing
+        @inlinable
+    #else
+        @usableFromInline
+    #endif
     init(wrapped: Wrapped) {
         self.wrapped = wrapped
     }
 
+    // swiftformat:enable redundantMemberwiseInit
+
+    // swiftformat:disable docComments spaceInsideComments
     /**
      * Evaluates whether the wrapped specification is NOT satisfied by the context.
      *
      * - Parameter candidate: The context to evaluate.
      * - Returns: `true` if the wrapped specification is NOT satisfied, `false` otherwise.
      */
+    #if !Tracing
+        @inlinable
+    #endif
     public func isSatisfiedBy(_ candidate: T) -> Bool {
         #if Tracing
             return SpecificationTraceRuntime.withBoolean("NOT") {
@@ -347,4 +396,5 @@ public struct NotSpecification<Wrapped: Specification>: Specification {
             !wrapped.isSatisfiedBy(candidate)
         #endif
     }
+    // swiftformat:enable docComments spaceInsideComments
 }

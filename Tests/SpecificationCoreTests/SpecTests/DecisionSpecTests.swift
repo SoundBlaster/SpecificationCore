@@ -5,12 +5,11 @@
 //  Created by SpecificationKit on 2025.
 //
 
+@testable import SpecificationCore
 import XCTest
 
-@testable import SpecificationCore
-
 final class DecisionSpecTests: XCTestCase {
-    // Test context for discount decisions
+    /// Test context for discount decisions
     struct UserContext {
         var isVip: Bool
         var isInPromo: Bool
@@ -43,6 +42,19 @@ final class DecisionSpecTests: XCTestCase {
 
         // Assert
         XCTAssertNil(result)
+    }
+
+    func testPredicateDecisionSpec_returnsConfiguredResultOnlyWhenPredicateMatches() {
+        let decision = PredicateDecisionSpec<UserContext, Int>(
+            predicate: { $0.isVip },
+            result: 50
+        )
+
+        XCTAssertEqual(
+            decision.decide(UserContext(isVip: true, isInPromo: false, isBirthday: false)),
+            50
+        )
+        XCTAssertNil(decision.decide(UserContext(isVip: false, isInPromo: true, isBirthday: false)))
     }
 
     // MARK: - FirstMatchSpec Tests

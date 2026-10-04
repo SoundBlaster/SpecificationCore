@@ -12,22 +12,32 @@ import Foundation
 /// into the standard specification patterns.
 public struct PredicateSpec<T>: Specification {
     /// The predicate function that determines if the specification is satisfied
-    private let predicate: (T) -> Bool
+    @usableFromInline let predicate: (T) -> Bool
 
     /// An optional description of what this predicate checks
     public let description: String?
 
+    // swiftformat:disable docComments
     /// Creates a new PredicateSpec with the given predicate
     /// - Parameters:
     ///   - description: An optional description of what this predicate checks
     ///   - predicate: The closure that evaluates the candidate
+    #if !Tracing
+        @inlinable
+    #endif
     public init(description: String? = nil, _ predicate: @escaping (T) -> Bool) {
         self.description = description
         self.predicate = predicate
     }
 
+    // swiftformat:enable docComments
+
+    // swiftformat:disable docComments
     /// Evaluates the predicate. With tracing enabled and a recorder active,
     /// records a span named by `description` or the reflected type name.
+    #if !Tracing
+        @inlinable
+    #endif
     public func isSatisfiedBy(_ candidate: T) -> Bool {
         #if Tracing
             return SpecificationTraceRuntime.withBoolean(description ?? String(reflecting: Self.self)) {
@@ -37,6 +47,7 @@ public struct PredicateSpec<T>: Specification {
             predicate(candidate)
         #endif
     }
+    // swiftformat:enable docComments
 }
 
 // MARK: - Convenience Factory Methods
