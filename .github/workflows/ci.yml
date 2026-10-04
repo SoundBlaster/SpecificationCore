@@ -139,6 +139,41 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
+  static-first-match-performance:
+    name: Cross-module StaticFirstMatch Release performance
+    runs-on: macos-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate report parser and regression gate
+        run: python3 scripts/test_static_first_match_performance.py
+      - name: Run separate-module Release benchmark and gate
+        run: python3 scripts/check_static_first_match_performance.py
+      - name: Publish comparison summary
+        if: always()
+        run: |
+          if [[ -f .build/static-first-match-performance/report.md ]]; then
+            cat .build/static-first-match-performance/report.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Publish raw benchmark evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: static-first-match-performance
+          path: |
+            .build/static-first-match-performance/*.csv
+            .build/static-first-match-performance/*.json
+            .build/static-first-match-performance/*.md
+            .build/static-first-match-performance/*.log
+          if-no-files-found: warn
+          retention-days: 14
+
   build-release:
     name: Build Release Configuration
     runs-on: macos-latest

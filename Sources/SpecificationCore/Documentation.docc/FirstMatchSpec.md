@@ -23,6 +23,10 @@ Use `FirstMatchSpec` when you need to:
 - Make priority-based decisions with fallback values
 - Implement feature experiment assignments
 
+## Static Rule Sets
+
+For a fixed rule set, use ``StaticFirstMatch`` to keep the rules as a concrete typed composition.
+
 ## Quick Example
 
 ```swift
