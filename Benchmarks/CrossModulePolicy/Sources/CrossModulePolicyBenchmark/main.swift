@@ -65,10 +65,15 @@ private func expected(_ value: Int, strategy: String) -> Int? {
     case "concrete_or": value == 0 || value < 8 ? 1 : nil
     case "concrete_not": value >= 8 ? 1 : nil
     case "first_match":
-        if value == 0 { 10 }
-        else if value.isMultiple(of: 3) { 7 }
-        else if value < 8 { 3 }
-        else { nil }
+        if value == 0 {
+            10
+        } else if value.isMultiple(of: 3) {
+            7
+        } else if value < 8 {
+            3
+        } else {
+            nil
+        }
     case "returning_adapter", "predicate_decision": value.isMultiple(of: 3) ? 7 : nil
     default: fatalError("Unknown strategy: \(strategy)")
     }

@@ -7,6 +7,7 @@ let specificationCoreIdentity = URL(fileURLWithPath: specificationCorePath).stan
 
 let package = Package(
     name: "CrossModulePolicyBenchmark",
+    platforms: [.macOS(.v10_15)],
     dependencies: [.package(path: specificationCorePath)],
     targets: [
         .executableTarget(
