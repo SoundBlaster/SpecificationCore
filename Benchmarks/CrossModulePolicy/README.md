@@ -5,14 +5,15 @@ This executable imports the SwiftPM `SpecificationCore` product into a separate 
 Run the candidate from the repository root:
 
 ```sh
-rtk swift run -c release --package-path Benchmarks/CrossModulePolicy
+swift run -c release --package-path Benchmarks/CrossModulePolicy
 ```
 
 To measure the base revision, export that revision into a separate directory and point the consumer package at it. The export should contain the complete package, including `Package.swift` and `Sources/`:
 
 ```sh
-rtk proxy git archive 9a791d1c90c70293f9f4dd30de604e39dc191639 | rtk proxy tar -x -C /Volumes/FlashCard/SpecificationCore-baseline
-rtk proxy env SPECIFICATIONCORE_PACKAGE=/Volumes/FlashCard/SpecificationCore-baseline rtk swift run -c release --package-path Benchmarks/CrossModulePolicy
+baseline_dir="$(mktemp -d)"
+git archive 9a791d1c90c70293f9f4dd30de604e39dc191639 | tar -x -C "$baseline_dir"
+env SPECIFICATIONCORE_PACKAGE="$baseline_dir" swift run -c release --package-path Benchmarks/CrossModulePolicy
 ```
 
 Use a fresh scratch path for each build if comparing in the same checkout. Repeat each executable several times and retain the full CSV output. Building each variant with `-c release` keeps the consumer and dependency in optimized mode while preserving the module boundary.
