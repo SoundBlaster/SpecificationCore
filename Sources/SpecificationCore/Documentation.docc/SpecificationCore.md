@@ -98,6 +98,7 @@ var discountType: String
 
 - ``Specification``
 - ``DecisionSpec``
+- ``StaticFirstMatch``
 - ``AsyncSpecification``
 - ``ContextProviding``
 - ``AnySpecification``

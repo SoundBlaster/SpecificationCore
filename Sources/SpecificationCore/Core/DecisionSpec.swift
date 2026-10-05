@@ -26,12 +26,17 @@ public protocol DecisionSpec {
 
 /// Extension to allow any boolean Specification to be used where a DecisionSpec is expected
 public extension Specification {
+    // swiftformat:disable docComments
     /// Creates a DecisionSpec that returns the given result when this specification is satisfied
     /// - Parameter result: The result to return when the specification is satisfied
     /// - Returns: A DecisionSpec that returns the given result when this specification is satisfied
+    #if !Tracing
+        @inlinable
+    #endif
     func returning<Result>(_ result: Result) -> BooleanDecisionAdapter<Self, Result> {
         BooleanDecisionAdapter(specification: self, result: result)
     }
+    // swiftformat:enable docComments
 }
 
 /// An adapter that converts a boolean Specification into a DecisionSpec
@@ -39,18 +44,27 @@ public struct BooleanDecisionAdapter<S: Specification, R>: DecisionSpec {
     public typealias Context = S.T
     public typealias Result = R
 
-    private let specification: S
-    private let result: R
+    @usableFromInline let specification: S
+    @usableFromInline let result: R
 
+    // swiftformat:disable docComments
     /// Creates a new adapter that wraps a boolean specification
     /// - Parameters:
     ///   - specification: The boolean specification to adapt
     ///   - result: The result to return when the specification is satisfied
+    #if !Tracing
+        @inlinable
+    #endif
     public init(specification: S, result: R) {
         self.specification = specification
         self.result = result
     }
 
+    // swiftformat:enable docComments
+
+    #if !Tracing
+        @inlinable
+    #endif
     public func decide(_ context: Context) -> Result? {
         #if Tracing
             if SpecificationTraceRuntime.isExcluded(specification) {
@@ -127,18 +141,27 @@ public struct AnyDecisionSpec<Context, Result>: DecisionSpec {
 
 /// A DecisionSpec that uses a predicate function and result
 public struct PredicateDecisionSpec<Context, Result>: DecisionSpec {
-    private let predicate: (Context) -> Bool
-    private let result: Result
+    @usableFromInline let predicate: (Context) -> Bool
+    @usableFromInline let result: Result
 
+    // swiftformat:disable docComments
     /// Creates a new PredicateDecisionSpec with the given predicate and result
     /// - Parameters:
     ///   - predicate: A function that determines if the specification is satisfied
     ///   - result: The result to return if the predicate returns true
+    #if !Tracing
+        @inlinable
+    #endif
     public init(predicate: @escaping (Context) -> Bool, result: Result) {
         self.predicate = predicate
         self.result = result
     }
 
+    // swiftformat:enable docComments
+
+    #if !Tracing
+        @inlinable
+    #endif
     public func decide(_ context: Context) -> Result? {
         #if Tracing
             return SpecificationTraceRuntime.withDecision("PredicateDecisionSpec") {
