@@ -50,3 +50,24 @@ Default/off/Tracing/both semantic suites and a fresh actual-source on/off matrix
 must pass or be reviewed on this production head before merge. The experiment's
 eligibility still uses its original cost gate and may report inline-only as not
 qualified; that is not retroactively changed into an experimental PASS.
+
+## Production trait on/off repeat
+
+The 2026-10-05 local repeat compiles the same shipping source with and without
+`-D AggressiveInlining`, then benchmarks a separately compiled consumer in ten
+alternating process pairs. The nested-chain median time ratio was 0.01615
+(about 62x faster; paired bootstrap 95% interval 0.01576–0.01623). The balanced
+ratio was 0.32008 (about 3.1x faster; interval 0.31650–0.33256). Dynamic
+FirstMatchSpec remained effectively unchanged at 0.99353.
+
+The three static-workload clean compilation ratios were 0.693, 1.033 and 1.383:
+their median is +3.3%, but the variation is large. This does not invalidate the
+earlier +18.8% median or establish a reliable fixed compilation cost. Combined
+library/consumer `__TEXT` size ratios were 1.0. No measured strategy had a
+statistically confirmed regression exceeding 5%.
+
+Raw report and command logs are in
+`/private/tmp/SpecificationCore-performance-trait-20261005` on the measurement
+host; CI uploads independent reports. Source builds passed reference-parity
+checks. Library-evolution comparison remains unavailable because the baseline
+does not compile in that mode; this PR does not adopt frozen layouts.
