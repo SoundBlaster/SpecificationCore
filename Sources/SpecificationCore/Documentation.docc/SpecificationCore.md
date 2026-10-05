@@ -140,6 +140,10 @@ var discountType: String
 
 - <doc:Tracing>
 
+### Performance and Build Configuration
+
+- <doc:EvaluationPerformance>
+
 ## See Also
 
 - [SpecificationKit](https://github.com/yourorg/SpecificationKit) - Platform-specific features and SwiftUI integration

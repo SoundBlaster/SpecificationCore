@@ -259,7 +259,15 @@ If you only need core functionality without platform-specific features, use **Sp
 
 The `AggressiveInlining` SwiftPM trait favors evaluation speed and is enabled by
 default. Consumers can disable default traits to favor build time. See
-[the performance choice and measured tradeoffs](DOCS/performance-inlining.md).
+[the configuration guide](Sources/SpecificationCore/Documentation.docc/EvaluationPerformance.md)
+and [the measurement and acceptance record](DOCS/performance-inlining.md).
+
+Repeated separate-module Release benchmarks measured about **57–65x faster**
+nested growing-leaf chains and **3x faster** balanced chains. Dynamic
+`FirstMatchSpec` did not materially improve. These are workload-specific results,
+not an overall application speedup. Compilation-time medians varied from +1.6%
+to +18.8%; choose the default for hot evaluation paths and consider opting out
+when build turnaround matters more. Tracing disables forced inlining.
 
 SpecificationCore is designed for high performance:
 

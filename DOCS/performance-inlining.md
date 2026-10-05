@@ -15,13 +15,14 @@ can opt out of default traits in its dependency declaration:
 ```swift
 .package(
     url: "https://github.com/SoundBlaster/SpecificationCore.git",
-    from: "2.0.0",
+    branch: "codex/default-performance-inlining",
     traits: []
 )
 ```
 
-The version above illustrates syntax, not a claim that this change is released
-in 2.0.0. Use the branch containing this PR until an updated release is published.
+This feature is not yet released. After release, replace the branch requirement
+with a version requirement for a release containing the trait. For the full
+configuration guide, see [Choosing Evaluation Performance](../Sources/SpecificationCore/Documentation.docc/EvaluationPerformance.md).
 To opt out while using traces, select `traits: ["Tracing"]`.
 For a local root-package build use `swift test --disable-default-traits`.
 
@@ -71,3 +72,11 @@ Raw report and command logs are in
 host; CI uploads independent reports. Source builds passed reference-parity
 checks. Library-evolution comparison remains unavailable because the baseline
 does not compile in that mode; this PR does not adopt frozen layouts.
+
+A second independent local repeat (`SpecificationCore-performance-trait-repeat-20261005-1111`)
+measured ratios 0.01753 for the nested chain (about 57x) and 0.33180 for the balanced
+chain (about 3x), again with unchanged `__TEXT` size and no confirmed >5% regression.
+Its clean compilation ratios were 0.808, 1.071 and 1.016 (median +1.6%). Together
+the repeats establish a stable runtime benefit for these workloads, while compile
+cost remains variable. All four trait semantic suites passed CI on production
+head `9ed6a7c`; documentation updates require their own DocC build validation.
