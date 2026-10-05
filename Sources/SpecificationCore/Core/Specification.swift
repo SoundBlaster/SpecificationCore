@@ -246,6 +246,9 @@ public struct AndSpecification<Left: Specification, Right: Specification>: Speci
      */
     #if !Tracing
         @inlinable
+        #if AggressiveInlining && !Tracing
+            @inline(__always)
+        #endif
     #endif
     public func isSatisfiedBy(_ candidate: T) -> Bool {
         #if Tracing
@@ -319,6 +322,9 @@ public struct OrSpecification<Left: Specification, Right: Specification>: Specif
      */
     #if !Tracing
         @inlinable
+        #if AggressiveInlining && !Tracing
+            @inline(__always)
+        #endif
     #endif
     public func isSatisfiedBy(_ candidate: T) -> Bool {
         #if Tracing
@@ -386,6 +392,9 @@ public struct NotSpecification<Wrapped: Specification>: Specification {
      */
     #if !Tracing
         @inlinable
+        #if AggressiveInlining && !Tracing
+            @inline(__always)
+        #endif
     #endif
     public func isSatisfiedBy(_ candidate: T) -> Bool {
         #if Tracing

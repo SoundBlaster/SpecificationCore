@@ -20,6 +20,8 @@ let package = Package(
         )
     ],
     traits: [
+        .trait(name: "AggressiveInlining", description: "Favor evaluation performance over compile time"),
+        .default(enabledTraits: ["AggressiveInlining"]),
         .trait(name: "Tracing", description: "Emit opt-in specification evaluation traces")
     ],
     dependencies: [

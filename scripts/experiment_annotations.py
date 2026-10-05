@@ -145,6 +145,11 @@ def main():
                            "-emit-library", "-emit-module", "-emit-module-path",
                            str(directory / "SpecificationCore.swiftmodule"),
                            "-o", str(library), *map(str, copies[variant])]
+                # Direct swiftc does not interpret SwiftPM's default traits.
+                # Baseline explicitly omits AggressiveInlining; candidates enable
+                # the shipped opt-in trait when it exists (harmless for older sources).
+                if variant != "baseline":
+                    command[1:1] = ["-D", "AggressiveInlining"]
                 if evolution:
                     command.insert(1, "-enable-library-evolution")
                 code, duration = run_logged(command, directory / "library.log")

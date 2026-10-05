@@ -28,6 +28,9 @@ public struct BinaryFirstMatch<First: DecisionSpec, Second: DecisionSpec>: Decis
     /// Returns the first non-`nil` decision, preserving left-to-right priority.
     #if !Tracing
         @inlinable
+        #if AggressiveInlining && !Tracing
+            @inline(__always)
+        #endif
     #endif
     public func decide(_ context: Context) -> Result? {
         #if Tracing
@@ -344,6 +347,9 @@ public struct StaticFirstMatch<Rules: DecisionSpec>: DecisionSpec {
     /// Returns the first non-`nil` decision in builder order.
     #if !Tracing
         @inlinable
+        #if AggressiveInlining && !Tracing
+            @inline(__always)
+        #endif
     #endif
     public func decide(_ context: Context) -> Result? {
         #if Tracing

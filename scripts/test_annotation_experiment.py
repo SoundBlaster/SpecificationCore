@@ -5,14 +5,18 @@ import unittest
 from experiment_annotations import FILES, paired_summary, performance_qualified, transform
 
 
-def active_source(text, tracing):
+def active_source(text, tracing, aggressive_inlining=False):
     """Evaluate the simple Tracing conditionals used by attribute fixtures."""
     stack = [True]
     lines = []
     for line in text.splitlines():
         directive = line.strip()
-        if directive in ("#if Tracing", "#if !Tracing"):
-            condition = tracing if directive == "#if Tracing" else not tracing
+        if directive in ("#if Tracing", "#if !Tracing", "#if AggressiveInlining && !Tracing"):
+            condition = {
+                "#if Tracing": tracing,
+                "#if !Tracing": not tracing,
+                "#if AggressiveInlining && !Tracing": aggressive_inlining and not tracing,
+            }[directive]
             stack.append(stack[-1] and condition)
         elif directive == "#else":
             stack[-1] = stack[-2] and not stack[-1]
@@ -56,7 +60,8 @@ class AnnotationExperimentTests(unittest.TestCase):
             attributes = [i for i, line in enumerate(lines) if "@inline(__always)" in line]
             self.assertTrue(attributes, name)
             for index in attributes:
-                self.assertEqual(lines[index - 1].strip(), "#if !Tracing", name)
+                self.assertIn(lines[index - 1].strip(),
+                              ["#if !Tracing", "#if AggressiveInlining && !Tracing"], name)
                 self.assertEqual(lines[index + 1].strip(), "#endif", name)
 
     def test_target_gain_does_not_require_balanced_speedup(self):
@@ -75,6 +80,16 @@ class AnnotationExperimentTests(unittest.TestCase):
         self.assertFalse(performance_qualified(costly))
         cells["policy"] = {"status": "BUILD_FAILED_OR_UNAVAILABLE"}
         self.assertFalse(performance_qualified(cells))
+
+    def test_shipped_forced_inlining_requires_trait_and_excludes_tracing(self):
+        root = Path(__file__).resolve().parents[1] / "Sources/SpecificationCore"
+        for name in FILES:
+            text = (root / name).read_text()
+            for tracing in (False, True):
+                for enabled in (False, True):
+                    active = active_source(text, tracing, enabled)
+                    self.assertEqual("@inline(__always)" in active, enabled and not tracing,
+                                     (name, tracing, enabled))
 
     def test_freezing_is_explicit_and_does_not_change_unlisted_types(self):
         text = "public struct BinaryFirstMatch<A, B> {}\npublic struct FutureLayout {}"

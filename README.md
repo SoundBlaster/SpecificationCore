@@ -257,6 +257,10 @@ If you only need core functionality without platform-specific features, use **Sp
 
 ## Performance
 
+The `AggressiveInlining` SwiftPM trait favors evaluation speed and is enabled by
+default. Consumers can disable default traits to favor build time. See
+[the performance choice and measured tradeoffs](DOCS/performance-inlining.md).
+
 SpecificationCore is designed for high performance:
 
 - **Specification Evaluation**: <1μs for simple predicates

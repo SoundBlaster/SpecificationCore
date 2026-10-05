@@ -67,6 +67,9 @@ public struct AnySpecification<T>: Specification {
     // MARK: - Core Specification Protocol
 
     @inlinable
+    #if AggressiveInlining && !Tracing
+        @inline(__always)
+    #endif
     public func isSatisfiedBy(_ candidate: T) -> Bool {
         switch storage {
         case .constantTrue:
