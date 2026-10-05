@@ -52,33 +52,38 @@ It does not replace SwiftPM default/Tracing tests or Xcode integration acceptanc
 A public macro-plugin warning in this direct compiler probe is retained in logs;
 macro functionality must still be verified through the ordinary package tests.
 
-## Local result (2026-10-05, source-package language modes)
+## Local result: review-fixed rerun (2026-10-05)
 Swift compiler: `Apple Swift version 6.4 (swiftlang-6.4.0.34.1 clang-2100.3.34.1)
 Target: arm64-apple-macosx27.0.0`. Full production source module uses
 Swift 5 language mode; consumers use Swift 6. Arm64 macOS 14 deployment target,
 `-O -whole-module-optimization`; actual host: macOS-27.0-arm64-arm-64bit.
 Ten alternating process pairs and three alternating clean compilation pairs per
 cell. Ratios below are candidate/baseline; intervals are paired bootstrap 95%.
+
 | Variant | Workload | Median ratio | 95% interval | Cost gate |
 |---|---|---:|---|---|
-| inline | nested_growing_leaves_chain | 0.0159 | 0.0157–0.0161 | pass |
-| inline | static_balanced | 0.3249 | 0.3225–0.3392 | pass |
-| inline | first_match | 1.0078 | 0.9973–1.0124 | pass |
-| inline | composition | 1.0008 | 0.9944–1.0108 | pass |
-| inline_frozen | nested_growing_leaves_chain | 0.0170 | 0.0170–0.0174 | pass |
-| inline_frozen | static_balanced | 0.3267 | 0.3167–0.3317 | pass |
-| inline_frozen | first_match | 1.0025 | 0.9911–1.0090 | pass |
-| inline_frozen | composition | 0.9995 | 0.9886–1.0141 | pass |
+| inline | nested_growing_leaves_chain | 0.0154 | 0.0150–0.0159 | fail |
+| inline | static_balanced | 0.3210 | 0.3140–0.3328 | fail |
+| inline | first_match | 1.0024 | 0.9875–1.0223 | pass |
+| inline | composition | 1.0105 | 1.0057–1.0226 | pass |
 
-Both source-mode candidates meet the targeted benchmark improvement and cost
-gates in this local run; no significant >5% regression was observed in the other
-consumer strategies. This does not establish full semantic or distribution
-acceptance. Production sources remain unchanged.
+inline: `NOT_QUALIFIED_OR_INCOMPLETE`.
+| inline_frozen | nested_growing_leaves_chain | 0.0158 | 0.0156–0.0167 | pass |
+| inline_frozen | static_balanced | 0.3379 | 0.3317–0.3428 | pass |
+| inline_frozen | first_match | 1.0064 | 0.9935–1.0131 | pass |
+| inline_frozen | composition | 1.0076 | 1.0019–1.0176 | pass |
 
-- inline/static: median build-time ratio 1.0299; maximum total __TEXT ratio 1.0000.
-- inline/policy: median build-time ratio 0.9930; maximum total __TEXT ratio 1.0000.
-- inline_frozen/static: median build-time ratio 1.0231; maximum total __TEXT ratio 1.0000.
-- inline_frozen/policy: median build-time ratio 0.9762; maximum total __TEXT ratio 1.0000.
+inline_frozen: `PERFORMANCE_QUALIFIED_PENDING_SEMANTICS_AND_CI`.
+
+This rerun supersedes the initial local table. Forced inlining is now explicitly
+non-Tracing even for unconditional @inlinable methods. The gain requirement
+applies only to `nested_growing_leaves_chain`; all other strategies retain the
+regression gate. Production source files remain unchanged.
+
+- inline/static: median build-time ratio 1.1884; maximum total __TEXT ratio 1.0000.
+- inline/policy: median build-time ratio 0.9652; maximum total __TEXT ratio 1.0000.
+- inline_frozen/static: median build-time ratio 1.1363; maximum total __TEXT ratio 1.0000.
+- inline_frozen/policy: median build-time ratio 1.0582; maximum total __TEXT ratio 1.0000.
 
 Library-evolution baseline and inline-only module builds failed; all three
 inline+frozen builds succeeded and both consumers passed their independent
@@ -87,5 +92,7 @@ reference/parity smoke checks. Since no evolution baseline executable exists,
 experimental, not an accepted ABI change.
 
 Raw CSV, commands, compiler logs, source snapshots, client SIL and report.json
-are retained in the local experiment output and the CI artifact. CI runs the
-candidate default and Tracing suites separately; those results remain pending.
+are retained in the local experiment output and the CI artifact. Source and
+benchmark changes now trigger the experiment workflow. CI repeats the revised
+matrix and candidate default/Tracing suites on the new commit; results for the
+previous commit do not establish acceptance of this revision.

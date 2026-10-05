@@ -23,6 +23,17 @@ FROZEN = ["AndSpecification", "OrSpecification", "NotSpecification",
           "StaticFirstMatch", "AnySpecification", "PredicateSpec", "FirstMatchSpec"]
 VARIANTS = ["baseline", "inline", "inline_frozen"]
 WORKLOADS = {"static": "StaticFirstMatch", "policy": "CrossModulePolicy"}
+TARGET_STRATEGY = "nested_growing_leaves_chain"
+
+
+def performance_qualified(cells):
+    if not cells or any(c["status"] != "MEASURED" for c in cells.values()):
+        return False
+    target = cells.get("static", {}).get("strategies", {}).get(TARGET_STRATEGY)
+    return bool(target and target["target_gain"] and all(
+        c["cost_gate"] and not any(s["significant_regression"]
+                                  for s in c["strategies"].values())
+        for c in cells.values()))
 
 
 def paired_summary(ratios):
@@ -42,7 +53,9 @@ def transform(text, variant):
         return text
     text = re.sub(r"(@inlinable)(\s*(?:#endif\s*)?(?:public\s+)?func\s+"
                   r"(?:isSatisfiedBy|decide|decideWithMetadata)\b)",
-                  r"\1 @inline(__always)\2", text)
+                  # The additional attribute is guarded even when the existing
+                  # @inlinable declaration is unconditional (e.g. AnySpecification).
+                  r"\1\n#if !Tracing\n@inline(__always)\n#endif\2", text)
     if variant == "inline_frozen":
         for name in FROZEN:
             text = re.sub(r"(?m)^public struct " + name + r"\b",
@@ -210,11 +223,7 @@ def main():
     report["source_eligibility"] = {}
     for variant in VARIANTS[1:]:
         cells = report["runtime"][f"source/{variant}"]
-        measured = all(c["status"] == "MEASURED" for c in cells.values())
-        qualified = measured and all(c["cost_gate"] and not any(
-            s["significant_regression"] for s in c["strategies"].values())
-            for c in cells.values()) and all(
-            s["target_gain"] for s in cells["static"]["strategies"].values())
+        qualified = performance_qualified(cells)
         report["source_eligibility"][variant] = (
             "PERFORMANCE_QUALIFIED_PENDING_SEMANTICS_AND_CI" if qualified else
             "NOT_QUALIFIED_OR_INCOMPLETE")

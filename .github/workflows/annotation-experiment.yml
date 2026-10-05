@@ -4,6 +4,12 @@ on:
   workflow_dispatch:
   pull_request:
     paths:
+      - 'Sources/SpecificationCore/**'
+      - 'Benchmarks/StaticFirstMatch/**'
+      - 'Benchmarks/CrossModulePolicy/**'
+      - 'Package.swift'
+      - '**/Package.resolved'
+      - 'scripts/compare_policy_performance.py'
       - 'scripts/*annotation*'
       - 'DOCS/annotation-experiment.md'
       - '.github/workflows/annotation-experiment.yml'
