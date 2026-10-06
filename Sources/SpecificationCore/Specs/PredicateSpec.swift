@@ -37,6 +37,9 @@ public struct PredicateSpec<T>: Specification {
     /// records a span named by `description` or the reflected type name.
     #if !Tracing
         @inlinable
+        #if AggressiveInlining && !Tracing
+            @inline(__always)
+        #endif
     #endif
     public func isSatisfiedBy(_ candidate: T) -> Bool {
         #if Tracing

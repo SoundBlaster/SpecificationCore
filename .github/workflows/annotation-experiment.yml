@@ -1,0 +1,76 @@
+name: Annotation experiment
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'Sources/SpecificationCore/**'
+      - 'Benchmarks/StaticFirstMatch/**'
+      - 'Benchmarks/CrossModulePolicy/**'
+      - 'Package.swift'
+      - '**/Package.resolved'
+      - 'scripts/compare_policy_performance.py'
+      - 'scripts/*annotation*'
+      - 'DOCS/annotation-experiment.md'
+      - '.github/workflows/annotation-experiment.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  matrix:
+    name: Actual-source annotation matrix
+    runs-on: macos-26
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Harness tests
+        run: python3 -m unittest discover -s scripts -p 'test_annotation_experiment.py'
+      - name: Measure disposable candidates
+        run: python3 scripts/experiment_annotations.py --output-dir "$RUNNER_TEMP/annotation-matrix"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: annotation-matrix
+          path: ${{ runner.temp }}/annotation-matrix
+          retention-days: 7
+
+  semantics:
+    name: Candidate semantic tests (${{ matrix.variant }})
+    runs-on: macos-26
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [inline, inline_frozen]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply disposable candidate in isolated CI checkout
+        env:
+          ANNOTATION_VARIANT: ${{ matrix.variant }}
+        run: |
+          python3 - <<'PY'
+          import os, sys
+          from pathlib import Path
+          sys.path.insert(0, 'scripts')
+          from experiment_annotations import FILES, transform
+          for name in FILES:
+              path = Path('Sources/SpecificationCore') / name
+              path.write_text(transform(path.read_text(), os.environ['ANNOTATION_VARIANT']))
+          PY
+      - name: Default semantic suite
+        run: swift test
+      - name: Tracing semantic suite
+        run: swift test --traits Tracing

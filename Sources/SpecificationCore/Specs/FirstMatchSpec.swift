@@ -112,6 +112,9 @@ public struct FirstMatchSpec<Context, Result>: DecisionSpec {
     /// - Returns: The result of the first satisfied specification, or nil if none are satisfied
     #if !Tracing
         @inlinable
+        #if AggressiveInlining && !Tracing
+            @inline(__always)
+        #endif
     #endif
     public func decide(_ context: Context) -> Result? {
         #if Tracing
@@ -150,6 +153,9 @@ public struct FirstMatchSpec<Context, Result>: DecisionSpec {
     /// satisfied
     #if !Tracing
         @inlinable
+        #if AggressiveInlining && !Tracing
+            @inline(__always)
+        #endif
     #endif
     public func decideWithMetadata(_ context: Context) -> (result: Result, index: Int)? {
         #if Tracing

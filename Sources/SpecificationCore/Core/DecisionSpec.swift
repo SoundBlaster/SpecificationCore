@@ -64,6 +64,9 @@ public struct BooleanDecisionAdapter<S: Specification, R>: DecisionSpec {
 
     #if !Tracing
         @inlinable
+        #if AggressiveInlining && !Tracing
+            @inline(__always)
+        #endif
     #endif
     public func decide(_ context: Context) -> Result? {
         #if Tracing
@@ -161,6 +164,9 @@ public struct PredicateDecisionSpec<Context, Result>: DecisionSpec {
 
     #if !Tracing
         @inlinable
+        #if AggressiveInlining && !Tracing
+            @inline(__always)
+        #endif
     #endif
     public func decide(_ context: Context) -> Result? {
         #if Tracing
