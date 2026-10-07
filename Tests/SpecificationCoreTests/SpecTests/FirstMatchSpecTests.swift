@@ -145,7 +145,7 @@ final class FirstMatchSpecTests: XCTestCase {
 
         let spec = FirstMatchSpec<Ctx, Action>([
             (AnySpecification(a.and(c)), .one),
-            (AnySpecification(a.not().and(b)), .two),
+            (AnySpecification(a.not().and(b)), .two)
         ])
 
         XCTAssertEqual(spec.decide(Ctx(flag: true)), .one)
