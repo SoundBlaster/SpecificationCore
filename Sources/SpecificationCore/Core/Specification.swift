@@ -133,6 +133,7 @@ public extension Specification {
     #if !Tracing
         @inlinable
     #endif
+    @_disfavoredOverload
     func and<Other: Specification>(_ other: Other) -> AndSpecification<Self, Other>
         where Other.T == T
     {
@@ -162,6 +163,7 @@ public extension Specification {
     #if !Tracing
         @inlinable
     #endif
+    @_disfavoredOverload
     func or<Other: Specification>(_ other: Other) -> OrSpecification<Self, Other>
         where Other.T == T
     {
@@ -189,6 +191,7 @@ public extension Specification {
     #if !Tracing
         @inlinable
     #endif
+    @_disfavoredOverload
     func not() -> NotSpecification<Self> {
         NotSpecification(wrapped: self)
     }

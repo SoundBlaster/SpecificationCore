@@ -324,7 +324,6 @@ public extension PredicateSpec {
     /// Combines this predicate with another using logical AND
     /// - Parameter other: Another predicate to combine with
     /// - Returns: A new PredicateSpec that requires both predicates to be satisfied
-    @_disfavoredOverload
     func and(_ other: PredicateSpec<T>) -> PredicateSpec<T> {
         let combinedDescription = [description, other.description]
             .compactMap { $0 }
@@ -360,7 +359,6 @@ public extension PredicateSpec {
     /// Combines this predicate with another using logical OR
     /// - Parameter other: Another predicate to combine with
     /// - Returns: A new PredicateSpec that requires either predicate to be satisfied
-    @_disfavoredOverload
     func or(_ other: PredicateSpec<T>) -> PredicateSpec<T> {
         let combinedDescription = [description, other.description]
             .compactMap { $0 }
@@ -395,7 +393,6 @@ public extension PredicateSpec {
 
     /// Negates this predicate specification
     /// - Returns: A new PredicateSpec that is satisfied when this one is not
-    @_disfavoredOverload
     func not() -> PredicateSpec<T> {
         let negatedDescription = description.map { "NOT (\($0))" }
         return PredicateSpec(description: negatedDescription) { candidate in

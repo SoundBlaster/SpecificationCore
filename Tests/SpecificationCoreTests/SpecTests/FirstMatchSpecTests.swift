@@ -150,5 +150,9 @@ final class FirstMatchSpecTests: XCTestCase {
 
         XCTAssertEqual(spec.decide(Ctx(flag: true)), .one)
         XCTAssertEqual(spec.decide(Ctx(flag: false)), .two)
+
+        // Unannotated composition keeps returning PredicateSpec (not AndSpecification).
+        XCTAssertEqual(a.and(c).description, "a AND c")
+        XCTAssertEqual(a.not().description, "NOT (a)")
     }
 }
