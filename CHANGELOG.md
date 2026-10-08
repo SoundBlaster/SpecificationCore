@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- `PredicateSpec.and(_:)`, `or(_:)` and `not()` no longer cause `ambiguous use` compile errors when composed inside a `FirstMatchSpec` array literal. The protocol-extension `and`/`or`/`not` overloads are now `@_disfavoredOverload`, so `PredicateSpec` keeps returning `PredicateSpec` for unannotated calls.
+- `FirstMatchSpec.init(_:includeMetadata:)` no longer reports `ambiguous use` for `AnySpecification` pairs; the generic initializer is now `@_disfavoredOverload` (#22).
+
 ## [2.1.0] - 2026-09-24
 
 ### Added

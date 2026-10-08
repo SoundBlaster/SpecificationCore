@@ -132,4 +132,27 @@ final class FirstMatchSpecTests: XCTestCase {
         let secondMatchContext = UserContext(isVip: false, isInPromo: true, isBirthday: false)
         XCTAssertEqual(spec.decideWithMetadata(secondMatchContext)?.index, 1)
     }
+
+    // Regression: issue #22 — composed PredicateSpecs inside an array literal were ambiguous.
+    func testArrayLiteralWithComposedPredicateSpecsCompiles() {
+        struct Ctx { let flag: Bool }
+        enum Action { case one, two }
+        typealias CS = PredicateSpec<Ctx>
+
+        let a = CS(description: "a") { $0.flag }
+        let b = CS(description: "b") { !$0.flag }
+        let c = CS(description: "c") { $0.flag }
+
+        let spec = FirstMatchSpec<Ctx, Action>([
+            (AnySpecification(a.and(c)), .one),
+            (AnySpecification(a.not().and(b)), .two)
+        ])
+
+        XCTAssertEqual(spec.decide(Ctx(flag: true)), .one)
+        XCTAssertEqual(spec.decide(Ctx(flag: false)), .two)
+
+        // Unannotated composition keeps returning PredicateSpec (not AndSpecification).
+        XCTAssertEqual(a.and(c).description, "a AND c")
+        XCTAssertEqual(a.not().description, "NOT (a)")
+    }
 }

@@ -97,6 +97,7 @@ public struct FirstMatchSpec<Context, Result>: DecisionSpec {
     #if !Tracing
         @inlinable
     #endif
+    @_disfavoredOverload
     public init<S: Specification>(_ pairs: [(S, Result)], includeMetadata: Bool = false)
         where S.T == Context
     {
