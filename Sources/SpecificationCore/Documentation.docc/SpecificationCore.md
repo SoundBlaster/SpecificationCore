@@ -146,6 +146,6 @@ var discountType: String
 
 ## See Also
 
-- [SpecificationKit](https://github.com/yourorg/SpecificationKit) - Platform-specific features and SwiftUI integration
+- [SpecificationKit](https://github.com/SoundBlaster/SpecificationKit) - Platform-specific features and SwiftUI integration
 - [Getting Started Tutorial](doc:GettingStartedCore)
-- [GitHub Repository](https://github.com/yourorg/SpecificationCore)
+- [GitHub Repository](https://github.com/SoundBlaster/SpecificationCore)
